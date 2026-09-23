@@ -18,6 +18,8 @@ Contexto técnico para asistentes de IA. Documentación para personas: `README.m
 
 Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se llaman `--azul*`/`--sol*`, pero hoy son todos tonos de rosa y blanco). Logos: `logo-blanco.png` (sobre rosa: menú lateral) y `logo-rosa.png` (sobre blanco: ingreso), recortados del logo de la sucursal Mendoza **sin** «Mendoza» ni la dirección; `icono.png` = estrella sobre rosa (favicon / ícono en el celular). Los colores de fichas (gris/dorada) no siguen la marca porque identifican el tipo de ficha.
 
+**Modo oscuro:** todo color de superficie/texto sale de tokens de `:root` (`--superficie`, `--hover`, `--linea`, `--gris-suave`, `--marca-texto`…); el bloque oscuro los redefine bajo `@media (prefers-color-scheme:dark)` con `:root:not([data-tema="claro"])` y otra vez bajo `:root[data-tema="oscuro"]`. El selector Auto/☀️/🌙 del pie del menú (`elegirTema`, `localStorage bs_tema`) pone o saca `data-tema` en `<html>`. **No escribir colores fijos (`#fff`, grises) en reglas nuevas:** usar los tokens, o el oscuro queda con parches blancos. Excepciones a propósito: lo que va sobre el menú rosa (blanco) y el toast (verde/rojo fijos, con texto blanco).
+
 ## Navegación
 
 `TABS` / `ALL_TABS` → `mostrarTab(nombre)`. Cada tab tiene su `<section id="tab-<nombre>">` en el HTML y una función `render<Nombre>()`. Para agregar una pantalla hay que tocar los dos lugares.
