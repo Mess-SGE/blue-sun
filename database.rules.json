@@ -32,6 +32,7 @@
         }
       },
       "historial": {
+        ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'",
         "$cid": {
           "$id": {
             ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'recepcion' && newData.exists()))"
