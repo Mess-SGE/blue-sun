@@ -40,19 +40,19 @@ a{color:var(--azul2)}
   background:radial-gradient(circle at 50% 40%,#F2527F 0%,#EA235C 45%,#9E0E36 100%);color:#fff;
   transition:opacity .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1)}
 #intro.fin{opacity:0;transform:scale(1.06);pointer-events:none}
-.intro-sistema{position:absolute;text-align:center;padding:0 24px;animation:introSale .45s ease-in 1.75s forwards}
-.intro-sistema small{display:block;font-size:13px;letter-spacing:.35em;text-transform:uppercase;opacity:0;animation:introEntra .6s ease-out .1s forwards}
+.intro-sistema{position:absolute;text-align:center;padding:0 24px;animation:introSale .55s ease-in 2.9s forwards}
+.intro-sistema small{display:block;font-size:13px;letter-spacing:.35em;text-transform:uppercase;opacity:0;animation:introEntra .7s ease-out .15s forwards}
 .intro-palabras{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 14px;margin-top:16px}
 .intro-palabras span{font-size:clamp(22px,4.2vw,38px);font-weight:600;letter-spacing:-.02em;opacity:0;transform:translateY(14px);animation:introEntra .5s cubic-bezier(.2,.9,.3,1.2) forwards}
-.intro-palabras span:nth-child(1){animation-delay:.35s}.intro-palabras span:nth-child(2){animation-delay:.55s}
-.intro-palabras span:nth-child(3){animation-delay:.75s}.intro-palabras span:nth-child(4){animation-delay:.95s}
+.intro-palabras span:nth-child(1){animation-delay:.5s}.intro-palabras span:nth-child(2){animation-delay:.9s}
+.intro-palabras span:nth-child(3){animation-delay:1.3s}.intro-palabras span:nth-child(4){animation-delay:1.7s}
 .intro-palabras i{font-style:normal;opacity:.5}
 @keyframes introEntra{to{opacity:1;transform:none}}
 @keyframes introSale{to{opacity:0;transform:scale(.92);filter:blur(4px)}}
-.intro-escena{perspective:900px;opacity:0;animation:introAparece .01s linear 1.95s forwards}
+.intro-escena{perspective:900px;opacity:0;animation:introAparece .01s linear 3.2s forwards}
 @keyframes introAparece{to{opacity:1}}
 .intro-logo{position:relative;width:min(78vw,560px);aspect-ratio:541/144;transform-style:preserve-3d;
-  animation:introGira 1.9s cubic-bezier(.2,1.1,.3,1) 1.95s both,introMece 2.4s ease-in-out 3.85s infinite alternate}
+  animation:introGira 2.6s cubic-bezier(.2,1.1,.3,1) 3.2s both,introMece 2.6s ease-in-out 5.8s infinite alternate}
 .intro-logo img{position:absolute;inset:0;width:100%;height:100%;backface-visibility:visible}
 .intro-logo img.capa{filter:brightness(.48) saturate(1.25)}
 @keyframes introGira{
@@ -63,9 +63,9 @@ a{color:var(--azul2)}
 .intro-brillo{position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.85) 50%,transparent 65%);background-size:250% 100%;background-position:130% 0;
   -webkit-mask:url(logo-blanco.png) center/100% 100% no-repeat;mask:url(logo-blanco.png) center/100% 100% no-repeat;
-  transform:translateZ(1px);animation:introBrillo 1.1s ease-in-out 3.6s forwards}
+  transform:translateZ(1px);animation:introBrillo 1.4s ease-in-out 5.5s forwards}
 @keyframes introBrillo{to{background-position:-30% 0}}
-.intro-lema{position:absolute;bottom:calc(14% + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:14px;letter-spacing:.3em;text-transform:uppercase;opacity:0;animation:introEntra .6s ease-out 3.4s forwards}
+.intro-lema{position:absolute;bottom:calc(14% + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:14px;letter-spacing:.3em;text-transform:uppercase;opacity:0;animation:introEntra .8s ease-out 5.1s forwards}
 .intro-saltar{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer}
 @media (prefers-reduced-motion:reduce){
   .intro-sistema{display:none}
@@ -411,7 +411,7 @@ function armarIntro(){
   var capas = '', n = 22;
   for(var i = n; i >= 1; i--) capas += '<img class="capa" src="logo-rosa.png" alt="" style="transform:translateZ(' + (-i * 1.5) + 'px)">';
   $('introLogo').innerHTML = capas + '<img src="logo-blanco.png" alt="Blue Sun"><div class="intro-brillo"></div>';
-  var dura = matchMedia('(prefers-reduced-motion: reduce)').matches ? 1600 : 5600;
+  var dura = matchMedia('(prefers-reduced-motion: reduce)').matches ? 2200 : 8600;
   _introT = setTimeout(cerrarIntro, dura);
 }
 function cerrarIntro(){

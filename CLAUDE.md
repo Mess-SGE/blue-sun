@@ -22,7 +22,7 @@ Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se l
 
 ## Presentación de entrada
 
-`#intro` (arriba de todo, `z-index:200`): primero las palabras del sistema (Clientes · Abonos · Caja · Fichas) y después el logo en 3D. El volumen es de verdad CSS 3D: 22 capas de `logo-rosa.png` oscurecidas, cada una con `translateZ` negativo, detrás de `logo-blanco.png`, dentro de un contenedor con `preserve-3d` que gira (`introGira`) y después se mece (`introMece`). El brillo es un degradé enmascarado con el mismo logo. Se muestra **una vez por sesión del navegador** (`sessionStorage bs_intro`), se salta tocando, dura ~5,6 s y con movimiento reducido pasa a un fundido de 1,6 s. Es un overlay: la app/ingreso arrancan debajo al mismo tiempo, no esperan a la animación.
+`#intro` (arriba de todo, `z-index:200`): primero las palabras del sistema (Clientes · Abonos · Caja · Fichas) y después el logo en 3D. El volumen es de verdad CSS 3D: 22 capas de `logo-rosa.png` oscurecidas, cada una con `translateZ` negativo, detrás de `logo-blanco.png`, dentro de un contenedor con `preserve-3d` que gira (`introGira`) y después se mece (`introMece`). El brillo es un degradé enmascarado con el mismo logo. Se muestra **una vez por sesión del navegador** (`sessionStorage bs_intro`), se salta tocando, dura ~8,6 s y con movimiento reducido pasa a un fundido de 2,2 s. Si se cambia la duración, mover juntos los `animation-delay` del CSS de `#intro` y `dura` en `armarIntro()`. Es un overlay: la app/ingreso arrancan debajo al mismo tiempo, no esperan a la animación.
 
 ## Navegación
 
