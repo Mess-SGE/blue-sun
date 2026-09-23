@@ -34,6 +34,48 @@ button,input,select,textarea{font-family:inherit;font-size:15px}
 a{color:var(--azul2)}
 .oculto{display:none!important}
 
+
+/* ===== Presentación de entrada (sistema → logo 3D) ===== */
+#intro{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;
+  background:radial-gradient(circle at 50% 40%,#F2527F 0%,#EA235C 45%,#9E0E36 100%);color:#fff;
+  transition:opacity .6s cubic-bezier(.2,.8,.2,1),transform .6s cubic-bezier(.2,.8,.2,1)}
+#intro.fin{opacity:0;transform:scale(1.06);pointer-events:none}
+.intro-sistema{position:absolute;text-align:center;padding:0 24px;animation:introSale .45s ease-in 1.75s forwards}
+.intro-sistema small{display:block;font-size:13px;letter-spacing:.35em;text-transform:uppercase;opacity:0;animation:introEntra .6s ease-out .1s forwards}
+.intro-palabras{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 14px;margin-top:16px}
+.intro-palabras span{font-size:clamp(22px,4.2vw,38px);font-weight:600;letter-spacing:-.02em;opacity:0;transform:translateY(14px);animation:introEntra .5s cubic-bezier(.2,.9,.3,1.2) forwards}
+.intro-palabras span:nth-child(1){animation-delay:.35s}.intro-palabras span:nth-child(2){animation-delay:.55s}
+.intro-palabras span:nth-child(3){animation-delay:.75s}.intro-palabras span:nth-child(4){animation-delay:.95s}
+.intro-palabras i{font-style:normal;opacity:.5}
+@keyframes introEntra{to{opacity:1;transform:none}}
+@keyframes introSale{to{opacity:0;transform:scale(.92);filter:blur(4px)}}
+.intro-escena{perspective:900px;opacity:0;animation:introAparece .01s linear 1.95s forwards}
+@keyframes introAparece{to{opacity:1}}
+.intro-logo{position:relative;width:min(78vw,560px);aspect-ratio:541/144;transform-style:preserve-3d;
+  animation:introGira 1.9s cubic-bezier(.2,1.1,.3,1) 1.95s both,introMece 2.4s ease-in-out 3.85s infinite alternate}
+.intro-logo img{position:absolute;inset:0;width:100%;height:100%;backface-visibility:visible}
+.intro-logo img.capa{filter:brightness(.48) saturate(1.25)}
+@keyframes introGira{
+  0%{transform:rotateX(22deg) rotateY(-80deg) scale(.55);opacity:0}
+  35%{opacity:1}
+  100%{transform:rotateX(10deg) rotateY(-22deg) scale(1);opacity:1}}
+@keyframes introMece{from{transform:rotateX(10deg) rotateY(-22deg)}to{transform:rotateX(6deg) rotateY(18deg)}}
+.intro-brillo{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.85) 50%,transparent 65%);background-size:250% 100%;background-position:130% 0;
+  -webkit-mask:url(logo-blanco.png) center/100% 100% no-repeat;mask:url(logo-blanco.png) center/100% 100% no-repeat;
+  transform:translateZ(1px);animation:introBrillo 1.1s ease-in-out 3.6s forwards}
+@keyframes introBrillo{to{background-position:-30% 0}}
+.intro-lema{position:absolute;bottom:calc(14% + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:14px;letter-spacing:.3em;text-transform:uppercase;opacity:0;animation:introEntra .6s ease-out 3.4s forwards}
+.intro-saltar{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;background:rgba(255,255,255,.18);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){
+  .intro-sistema{display:none}
+  .intro-escena{animation:none;opacity:1}
+  .intro-logo{animation:introFundido .6s ease both!important}
+  .intro-logo img.capa,.intro-brillo{display:none}
+  .intro-lema{animation:introEntra .6s ease .2s forwards}
+  @keyframes introFundido{from{opacity:0}to{opacity:1}}
+}
+
 /* ===== Modo oscuro ===== */
 @media (prefers-color-scheme:dark){ :root:not([data-tema="claro"]){
   --bg:#141013; --superficie:#1E181B; --card:#1E181B; --borde:#3A3035; --texto:#F4EEF0; --muted:#AA9CA2;
@@ -242,6 +284,17 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:var(--hove
 </head>
 <body>
 
+<!-- ===== Presentación de entrada ===== -->
+<div id="intro" aria-hidden="true" onclick="cerrarIntro()">
+  <button class="intro-saltar" onclick="cerrarIntro();event.stopPropagation()">Saltar</button>
+  <div class="intro-sistema">
+    <small>Sistema de gestión</small>
+    <div class="intro-palabras"><span>Clientes</span><span><i>·</i> Abonos</span><span><i>·</i> Caja</span><span><i>·</i> Fichas</span></div>
+  </div>
+  <div class="intro-escena"><div class="intro-logo" id="introLogo"></div></div>
+  <div class="intro-lema">Gestión de solarium</div>
+</div>
+
 <!-- ===== Pantalla de ingreso ===== -->
 <div id="login" class="oculto">
   <div class="login-card">
@@ -344,6 +397,30 @@ function aplicarTema(t){
 }
 function elegirTema(t){ try { localStorage.setItem('bs_tema', t); } catch(e){} aplicarTema(t); }
 aplicarTema(temaGuardado());
+
+/* ---------- Presentación de entrada ----------
+   Primero el sistema (palabras), después el logo en 3D: varias capas del logo
+   separadas en profundidad (translateZ) forman el volumen, y el conjunto gira hasta
+   quedar de frente. Se ve una vez por sesión del navegador; tocar la salta. */
+var _introT;
+function armarIntro(){
+  var el = $('intro');
+  var visto = false; try { visto = sessionStorage.getItem('bs_intro') === '1'; } catch(e){}
+  if(visto){ el.parentNode.removeChild(el); return; }
+  try { sessionStorage.setItem('bs_intro', '1'); } catch(e){}
+  var capas = '', n = 22;
+  for(var i = n; i >= 1; i--) capas += '<img class="capa" src="logo-rosa.png" alt="" style="transform:translateZ(' + (-i * 1.5) + 'px)">';
+  $('introLogo').innerHTML = capas + '<img src="logo-blanco.png" alt="Blue Sun"><div class="intro-brillo"></div>';
+  var dura = matchMedia('(prefers-reduced-motion: reduce)').matches ? 1600 : 5600;
+  _introT = setTimeout(cerrarIntro, dura);
+}
+function cerrarIntro(){
+  var el = $('intro'); if(!el || el.classList.contains('fin')) return;
+  clearTimeout(_introT);
+  el.classList.add('fin');
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 650);
+}
+armarIntro();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(){ aplicarTema(temaGuardado()); });
 
 /* =========================================================

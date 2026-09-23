@@ -20,6 +20,10 @@ Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se l
 
 **Modo oscuro:** todo color de superficie/texto sale de tokens de `:root` (`--superficie`, `--hover`, `--linea`, `--gris-suave`, `--marca-texto`…); el bloque oscuro los redefine bajo `@media (prefers-color-scheme:dark)` con `:root:not([data-tema="claro"])` y otra vez bajo `:root[data-tema="oscuro"]`. El selector Auto/☀️/🌙 del pie del menú (`elegirTema`, `localStorage bs_tema`) pone o saca `data-tema` en `<html>`. **No escribir colores fijos (`#fff`, grises) en reglas nuevas:** usar los tokens, o el oscuro queda con parches blancos. Excepciones a propósito: lo que va sobre el menú rosa (blanco) y el toast (verde/rojo fijos, con texto blanco).
 
+## Presentación de entrada
+
+`#intro` (arriba de todo, `z-index:200`): primero las palabras del sistema (Clientes · Abonos · Caja · Fichas) y después el logo en 3D. El volumen es de verdad CSS 3D: 22 capas de `logo-rosa.png` oscurecidas, cada una con `translateZ` negativo, detrás de `logo-blanco.png`, dentro de un contenedor con `preserve-3d` que gira (`introGira`) y después se mece (`introMece`). El brillo es un degradé enmascarado con el mismo logo. Se muestra **una vez por sesión del navegador** (`sessionStorage bs_intro`), se salta tocando, dura ~5,6 s y con movimiento reducido pasa a un fundido de 1,6 s. Es un overlay: la app/ingreso arrancan debajo al mismo tiempo, no esperan a la animación.
+
 ## Navegación
 
 `TABS` / `ALL_TABS` → `mostrarTab(nombre)`. Cada tab tiene su `<section id="tab-<nombre>">` en el HTML y una función `render<Nombre>()`. Para agregar una pantalla hay que tocar los dos lugares.
