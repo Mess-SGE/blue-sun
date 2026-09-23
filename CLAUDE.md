@@ -14,6 +14,10 @@ Contexto técnico para asistentes de IA. Documentación para personas: `README.m
 - Hosting en **GitHub Pages**.
 - Validar el JS con `node --check` antes de entregar. Para eso, extraer el script que está entre `<!-- ===== INICIO SCRIPT PRINCIPAL ===== -->` y `<!-- ===== FIN SCRIPT PRINCIPAL ===== -->`.
 
+## Marca
+
+Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se llaman `--azul*`/`--sol*`, pero hoy son todos tonos de rosa y blanco). Logos: `logo-blanco.png` (sobre rosa: menú lateral) y `logo-rosa.png` (sobre blanco: ingreso), recortados del logo de la sucursal Mendoza **sin** «Mendoza» ni la dirección; `icono.png` = estrella sobre rosa (favicon / ícono en el celular). Los colores de fichas (gris/dorada) no siguen la marca porque identifican el tipo de ficha.
+
 ## Navegación
 
 `TABS` / `ALL_TABS` → `mostrarTab(nombre)`. Cada tab tiene su `<section id="tab-<nombre>">` en el HTML y una función `render<Nombre>()`. Para agregar una pantalla hay que tocar los dos lugares.

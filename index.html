@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0B3D91">
+<meta name="theme-color" content="#EA235C">
+<link rel="icon" type="image/png" href="icono.png">
+<link rel="apple-touch-icon" href="icono.png">
 <title>Blue Sun · Gestión</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +16,9 @@
 <style>
 /* ===== Tokens de diseño ===== */
 :root{
-  --azul:#0B3D91; --azul2:#1565C0; --azul-claro:#E8F0FE; --sol:#F5A623; --sol-claro:#FFF4DE;
-  --bg:#F3F6FB; --card:#FFFFFF; --borde:#DADCE0; --texto:#1F2937; --muted:#6B7280;
+  /* Marca Blue Sun: rosa #EA235C (los nombres --azul/--sol quedaron de la primera versión) */
+  --azul:#EA235C; --azul2:#F2527F; --azul-oscuro:#B8113F; --azul-claro:#FDE8EF; --sol:#FFFFFF; --sol-claro:#FFF1F5;
+  --bg:#F8F5F6; --card:#FFFFFF; --borde:#DADCE0; --texto:#1F2937; --muted:#6B7280;
   --ok:#15803D; --ok-claro:#DCFCE7; --err:#DC2626; --err-claro:#FEE2E2; --warn:#B45309; --warn-claro:#FEF3C7;
   --gris-ficha:#9CA3AF; --dorada:#D4A017;
   --radio:16px; --sombra:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
@@ -32,15 +35,17 @@ a{color:var(--azul2)}
 
 /* ===== Login ===== */
 #login,#pendiente{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
-  background:radial-gradient(circle at 80% 10%,rgba(245,166,35,.35),transparent 40%),linear-gradient(160deg,#0B3D91 0%,#0A2A66 60%,#061a40 100%)}
+  background:radial-gradient(circle at 80% 10%,rgba(255,255,255,.22),transparent 40%),linear-gradient(160deg,#F2527F 0%,#EA235C 55%,#B8113F 100%)}
 .login-card{background:#fff;border-radius:24px;padding:36px 30px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .login-card h1{margin:12px 0 2px;font-size:28px;color:var(--azul);letter-spacing:-.02em;line-height:1.1}
 .login-card p{margin:0 0 22px;color:var(--muted)}
-.logo-sol{width:64px;height:64px}
+.login-card{text-align:center}
+.login-card .campo,.login-card .aviso{text-align:left}
+.logo-marca{width:100%;max-width:260px;height:auto;display:block;margin:4px auto 10px}
 .campo{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
 .campo label{font-size:13px;color:var(--muted);font-weight:500}
 input,select,textarea{border:1px solid var(--borde);border-radius:10px;padding:10px 12px;background:#fff;color:var(--texto);width:100%;outline:none;transition:border .15s,box-shadow .15s}
-input:focus,select:focus,textarea:focus{border-color:var(--azul2);box-shadow:0 0 0 3px rgba(21,101,192,.15)}
+input:focus,select:focus,textarea:focus{border-color:var(--azul2);box-shadow:0 0 0 3px rgba(234,35,92,.18)}
 input[type=checkbox]{width:auto}
 
 /* ===== Botones ===== */
@@ -49,7 +54,7 @@ input[type=checkbox]{width:auto}
 .btn:active,.nav-btn:active,.chip-ab:active,.seg button:active,.btn-icono:active,.ac-op:active{transform:scale(.97)}
 .nav-btn,.chip-ab,.seg button,.btn-icono,.ac-op{transition:transform var(--rapido) ease-out,background .15s,color .15s}
 .btn-pri{background:var(--azul);color:#fff}.btn-pri:hover{filter:brightness(1.12)}
-.btn-sol{background:var(--sol);color:#3b2600}.btn-sol:hover{filter:brightness(1.05)}
+.btn-sol{background:#fff;color:var(--azul);box-shadow:0 1px 2px rgba(0,0,0,.08);border:1px solid rgba(234,35,92,.25)}.btn-sol:hover{background:var(--azul-claro)}
 .btn-sec{background:#fff;color:var(--azul);border:1px solid var(--borde)}.btn-sec:hover{background:var(--azul-claro)}
 .btn-err{background:var(--err-claro);color:var(--err)}
 .btn-chico{padding:6px 10px;font-size:13px;border-radius:8px}
@@ -60,8 +65,9 @@ input[type=checkbox]{width:auto}
 
 /* ===== Layout ===== */
 #app{display:flex;min-height:100vh}
-#sidebar{width:248px;background:linear-gradient(180deg,#0B3D91,#082C6B);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40;will-change:transform}
-.sb-marca{display:flex;align-items:center;gap:10px;padding:20px 18px 14px}
+#sidebar{width:248px;background:linear-gradient(180deg,#EA235C,#B8113F);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40;will-change:transform}
+.sb-marca{padding:22px 22px 14px}
+.sb-marca img{width:100%;max-width:190px;height:auto;display:block}
 .sb-marca b{font-size:20px;letter-spacing:.5px}
 .sb-marca small{display:block;opacity:.7;font-size:12px}
 .sb-suc{margin:4px 14px 12px}
@@ -74,16 +80,16 @@ input[type=checkbox]{width:auto}
 .nav-btn.activo{background:#fff;color:var(--azul);font-weight:600}
 .nav-btn .ico{width:22px;text-align:center}
 .sb-pie{padding:14px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:13px}
-.sb-pie .rol{display:inline-block;background:var(--sol);color:#3b2600;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase}
+.sb-pie .rol{display:inline-block;background:#fff;color:var(--azul);border-radius:20px;padding:1px 9px;font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase}
 .sb-pie button{margin-top:10px;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer}
 main{flex:1;margin-left:248px;min-width:0}
-.topbar{position:sticky;top:0;z-index:30;background:rgba(243,246,251,.72);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);display:flex;align-items:center;gap:12px;padding:14px 24px;box-shadow:0 1px 0 rgba(0,0,0,0);transition:box-shadow .2s}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(248,245,246,.72);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);display:flex;align-items:center;gap:12px;padding:14px 24px;box-shadow:0 1px 0 rgba(0,0,0,0);transition:box-shadow .2s}
 .topbar.con-borde{box-shadow:0 1px 0 rgba(15,23,42,.08),0 6px 16px -10px rgba(15,23,42,.25)}
 .topbar h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
 .topbar .sub{color:var(--muted);font-size:13px}
 #btnMenu{display:none;background:#fff;border:1px solid var(--borde);border-radius:10px;padding:6px 10px;font-size:18px;cursor:pointer}
 .contenido{padding:22px 24px 60px;max-width:1280px}
-#bannerDemo{background:var(--sol-claro);color:#7a4b00;border-bottom:1px solid #f3d9a4;padding:8px 24px;font-size:13px}
+#bannerDemo{background:var(--sol-claro);color:var(--azul-oscuro);border-bottom:1px solid #F9C6D6;padding:8px 24px;font-size:13px}
 #velo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35;opacity:0;touch-action:pan-y}
 #bordeMenu{display:none;position:fixed;top:0;bottom:0;left:0;width:18px;z-index:34;touch-action:none}
 
@@ -100,7 +106,7 @@ main{flex:1;margin-left:248px;min-width:0}
 .kpi .val{font-size:26px;font-weight:600;margin-top:4px;letter-spacing:-.02em;line-height:1.1}
 .kpi .det{font-size:12px;color:var(--muted);margin-top:2px}
 .kpi::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:var(--azul-claro)}
-.kpi.sol::after{background:var(--sol-claro)}
+.kpi.sol::after{background:#FFF1F5}
 .kpi > *{position:relative;z-index:1}
 
 /* ===== Tablas ===== */
@@ -120,7 +126,7 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
 .b-warn{background:var(--warn-claro);color:var(--warn)}
 .b-azul{background:var(--azul-claro);color:var(--azul)}
 .b-gris{background:#F1F3F4;color:#5F6368}
-.b-sol{background:var(--sol-claro);color:#8a5a00}
+.b-sol{background:var(--azul-claro);color:var(--azul-oscuro)}
 .ficha{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)}
 .ficha.gris{background:var(--gris-ficha)}.ficha.dorada{background:var(--dorada)}
 .seg{display:inline-flex;background:#F1F3F4;border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
@@ -133,7 +139,7 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
 .chip-ab.no{border-color:var(--borde);background:#F8F9FA;color:#999;cursor:not-allowed}
 .barra{height:8px;background:#EEF0F3;border-radius:6px;overflow:hidden;min-width:70px}
 .barra > i{display:block;height:100%;background:linear-gradient(90deg,var(--azul2),var(--azul))}
-.barra.sol > i{background:linear-gradient(90deg,#FFC857,var(--sol))}
+.barra.sol > i{background:linear-gradient(90deg,#E9C46A,var(--dorada))}
 
 /* ===== Formulario de carga ===== */
 .form-fila{display:grid;gap:12px;grid-template-columns:repeat(12,1fr);align-items:end}
@@ -215,9 +221,8 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
 <!-- ===== Pantalla de ingreso ===== -->
 <div id="login" class="oculto">
   <div class="login-card">
-    <svg class="logo-sol" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="14" fill="#F5A623"/><g stroke="#F5A623" stroke-width="4" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="11"/><line x1="32" y1="53" x2="32" y2="60"/><line x1="4" y1="32" x2="11" y2="32"/><line x1="53" y1="32" x2="60" y2="32"/><line x1="12" y1="12" x2="17" y2="17"/><line x1="47" y1="47" x2="52" y2="52"/><line x1="12" y1="52" x2="17" y2="47"/><line x1="47" y1="17" x2="52" y2="12"/></g><circle cx="32" cy="32" r="8" fill="#0B3D91"/></svg>
-    <h1>Blue Sun</h1>
-    <p>Sistema de gestión del solarium</p>
+    <img src="logo-rosa.png" alt="Blue Sun" class="logo-marca">
+    <p>Sistema de gestión</p>
     <div class="campo"><label for="lgEmail">Email</label><input id="lgEmail" type="email" autocomplete="username"></div>
     <div class="campo"><label for="lgPass">Contraseña</label><input id="lgPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')ingresar()"></div>
     <button class="btn btn-pri btn-full" onclick="ingresar()">Ingresar</button>
@@ -238,10 +243,7 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
 <!-- ===== App ===== -->
 <div id="app" class="oculto">
   <aside id="sidebar">
-    <div class="sb-marca">
-      <svg width="38" height="38" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="14" fill="#F5A623"/><g stroke="#F5A623" stroke-width="4" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="11"/><line x1="32" y1="53" x2="32" y2="60"/><line x1="4" y1="32" x2="11" y2="32"/><line x1="53" y1="32" x2="60" y2="32"/><line x1="12" y1="12" x2="17" y2="17"/><line x1="47" y1="47" x2="52" y2="52"/><line x1="12" y1="52" x2="17" y2="47"/><line x1="47" y1="17" x2="52" y2="12"/></g></svg>
-      <div><b>BLUE SUN</b><small>Gestión de solarium</small></div>
-    </div>
+    <div class="sb-marca"><img src="logo-blanco.png" alt="Blue Sun"></div>
     <div class="sb-suc">
       <label for="selSucursal">Sucursal</label>
       <select id="selSucursal" onchange="cambiarSucursal(this.value)"></select>
@@ -365,7 +367,7 @@ function vibrar(p){ try { if(navigator.vibrate && !matchMedia('(prefers-reduced-
    Misma interfaz para Firebase y para el modo demo (localStorage).
    Las rutas son relativas a ROOT.
    ========================================================= */
-var DB = MODO_DEMO ? crearDBLocal() : crearDBFirebase();
+var DB = MODO_DEMO ? crearDBLocal() : (typeof firebase !== 'undefined' ? crearDBFirebase() : null);
 
 function crearDBFirebase(){
   firebase.initializeApp(FIREBASE_CONFIG);
@@ -499,6 +501,12 @@ function olvideClave(){
 function salir(){ if(MODO_DEMO){ location.reload(); return; } firebase.auth().signOut(); }
 
 function arrancar(){
+  if(!MODO_DEMO && typeof firebase === 'undefined'){
+    mostrarPantalla('login');
+    $('lgError').textContent = 'No se pudo conectar con el servidor. Revisá la conexión a internet y recargá la página.';
+    $('lgError').classList.remove('oculto');
+    return;
+  }
   if(MODO_DEMO){
     S.uid = 'demo'; S.email = 'demo@bluesun'; S.rol = 'admin';
     $('bannerDemo').classList.remove('oculto');
@@ -723,10 +731,10 @@ function renderInicio(){
     var maxEq = Math.max.apply(null, [1].concat(listaEquipos().map(function(e){ return tot.porEquipo[e.id] || 0; })));
 
     cont.innerHTML =
-      '<div class="card" style="background:linear-gradient(120deg,#0B3D91,#1565C0);color:#fff;border:none">' +
+      '<div class="card" style="background:linear-gradient(120deg,#B8113F,#EA235C 60%,#F2527F);color:#fff;border:none">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
         '<div><div style="opacity:.8;font-size:14px">' + esc(fmtLargo(f)) + '</div>' +
-        '<div style="font-size:24px;font-weight:600;margin-top:2px">¡Hola! ☀️ Blue Sun ' + esc(nombreSuc(S.suc)) + '</div></div>' +
+        '<div style="font-size:24px;font-weight:600;margin-top:2px">¡Hola! ✨ Blue Sun ' + esc(nombreSuc(S.suc)) + '</div></div>' +
         (puedeCargar() ? '<button class="btn btn-sol" onclick="S.fecha=hoy();mostrarTab(\'dia\')">＋ Anotar una sesión</button>' : '') +
       '</div></div>' +
       '<div class="grid g4" style="margin-bottom:18px">' +
