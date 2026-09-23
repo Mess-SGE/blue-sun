@@ -6,7 +6,7 @@
       "roles": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",
-          ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (auth.uid === $uid && auth.token.email === 'speranza.emiliano@gmail.com'))"
+          ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (auth.uid === $uid && (auth.token.email === 'speranza.emiliano@gmail.com' || auth.token.email === 'speranzaemiliano1@gmail.com')))"
         }
       },
 

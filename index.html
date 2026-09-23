@@ -299,7 +299,7 @@ var FIREBASE_CONFIG = {
   appId: '1:166786282651:web:05e8edad6b260fa78f823e'
 };
 var ROOT = 'bluesun';                          // nodo raíz en Realtime Database
-var ADMIN_EMAIL = 'speranza.emiliano@gmail.com'; // primer administrador
+var ADMIN_EMAILS = ['speranza.emiliano@gmail.com', 'speranzaemiliano1@gmail.com']; // administradores iniciales (también en database.rules.json)
 var MODO_DEMO = !FIREBASE_CONFIG.apiKey;
 
 /* =========================================================
@@ -509,7 +509,7 @@ function arrancar(){
     if(!u){ mostrarPantalla('login'); return; }
     S.uid = u.uid; S.email = u.email || '';
     DB.get('roles/' + u.uid).then(function(rol){
-      if((!rol || !rol.rol) && S.email.toLowerCase() === ADMIN_EMAIL){
+      if((!rol || !rol.rol) && ADMIN_EMAILS.indexOf(S.email.toLowerCase()) >= 0){
         rol = { rol:'admin', email:S.email, sucursal:'' };
         return DB.update({ ['roles/' + u.uid]: rol }).then(function(){ return rol; });
       }

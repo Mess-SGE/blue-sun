@@ -53,7 +53,7 @@ Contexto técnico para asistentes de IA. Documentación para personas: `README.m
 
 ## Roles
 
-Se aplican en el cliente (`esAdmin`, `puedeCargar`, `TABS[].visible`) **y además** en `database.rules.json`. Recepción sólo escribe movimientos y caja de **su** sucursal y no puede borrar (`newData.exists()`). `ADMIN_EMAIL` se autoasigna admin la primera vez que entra.
+Se aplican en el cliente (`esAdmin`, `puedeCargar`, `TABS[].visible`) **y además** en `database.rules.json`. Recepción sólo escribe movimientos y caja de **su** sucursal y no puede borrar (`newData.exists()`). Los mails de `ADMIN_EMAILS` (`speranza.emiliano@gmail.com`, `speranzaemiliano1@gmail.com`) se autoasignan admin la primera vez que entran; la misma lista está en la regla de `roles` de `database.rules.json` y hay que mantener las dos iguales.
 
 ⚠️ `database.rules.json` **no se aplica solo**: hay que publicarlo a mano en Firebase Console.
 
