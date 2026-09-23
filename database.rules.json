@@ -1,0 +1,60 @@
+{
+  "rules": {
+    "bluesun": {
+      ".read": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').exists()",
+
+      "roles": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (auth.uid === $uid && auth.token.email === 'speranza.emiliano@gmail.com'))"
+        }
+      },
+
+      "solicitudes": {
+        "$uid": {
+          ".write": "auth != null && (auth.uid === $uid || root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin')"
+        }
+      },
+
+      "sucursales": { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
+      "equipos":    { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
+      "servicios":  { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
+      "config":     { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
+
+      "clientes": {
+        "$id": {
+          ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'recepcion' && newData.exists()))"
+        }
+      },
+      "abonos": {
+        "$id": {
+          ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'recepcion' && newData.exists()))"
+        }
+      },
+      "historial": {
+        "$cid": {
+          "$id": {
+            ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'recepcion' && newData.exists()))"
+          }
+        }
+      },
+
+      "movimientos": {
+        "$suc": {
+          "$fecha": {
+            "$id": {
+              ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'recepcion' && root.child('bluesun/roles/' + auth.uid + '/sucursal').val() === $suc && newData.exists()))"
+            }
+          }
+        }
+      },
+      "cajas": {
+        "$suc": {
+          "$fecha": {
+            ".write": "auth != null && (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin' || (root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'recepcion' && root.child('bluesun/roles/' + auth.uid + '/sucursal').val() === $suc))"
+          }
+        }
+      }
+    }
+  }
+}

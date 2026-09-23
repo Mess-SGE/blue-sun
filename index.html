@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B3D91">
+<title>Blue Sun · Gestión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+/* ===== Tokens de diseño ===== */
+:root{
+  --azul:#0B3D91; --azul2:#1565C0; --azul-claro:#E8F0FE; --sol:#F5A623; --sol-claro:#FFF4DE;
+  --bg:#F3F6FB; --card:#FFFFFF; --borde:#DADCE0; --texto:#1F2937; --muted:#6B7280;
+  --ok:#15803D; --ok-claro:#DCFCE7; --err:#DC2626; --err-claro:#FEE2E2; --warn:#B45309; --warn-claro:#FEF3C7;
+  --gris-ficha:#9CA3AF; --dorada:#D4A017;
+  --radio:16px; --sombra:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Outfit',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--texto);font-size:15px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit;font-size:15px}
+a{color:var(--azul2)}
+.oculto{display:none!important}
+
+/* ===== Login ===== */
+#login,#pendiente{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(circle at 80% 10%,rgba(245,166,35,.35),transparent 40%),linear-gradient(160deg,#0B3D91 0%,#0A2A66 60%,#061a40 100%)}
+.login-card{background:#fff;border-radius:24px;padding:36px 30px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.login-card h1{margin:12px 0 2px;font-size:26px;color:var(--azul)}
+.login-card p{margin:0 0 22px;color:var(--muted)}
+.logo-sol{width:64px;height:64px}
+.campo{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.campo label{font-size:13px;color:var(--muted);font-weight:500}
+input,select,textarea{border:1px solid var(--borde);border-radius:10px;padding:10px 12px;background:#fff;color:var(--texto);width:100%;outline:none;transition:border .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--azul2);box-shadow:0 0 0 3px rgba(21,101,192,.15)}
+input[type=checkbox]{width:auto}
+
+/* ===== Botones ===== */
+.btn{border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:transform .05s,filter .15s,background .15s;white-space:nowrap}
+.btn:active{transform:scale(.98)}
+.btn-pri{background:var(--azul);color:#fff}.btn-pri:hover{filter:brightness(1.12)}
+.btn-sol{background:var(--sol);color:#3b2600}.btn-sol:hover{filter:brightness(1.05)}
+.btn-sec{background:#fff;color:var(--azul);border:1px solid var(--borde)}.btn-sec:hover{background:var(--azul-claro)}
+.btn-err{background:var(--err-claro);color:var(--err)}
+.btn-chico{padding:6px 10px;font-size:13px;border-radius:8px}
+.btn-icono{background:transparent;border:none;cursor:pointer;font-size:16px;padding:4px 6px;border-radius:6px}
+.btn-icono:hover{background:var(--azul-claro)}
+.btn-full{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ===== Layout ===== */
+#app{display:flex;min-height:100vh}
+#sidebar{width:248px;background:linear-gradient(180deg,#0B3D91,#082C6B);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40;transition:transform .25s}
+.sb-marca{display:flex;align-items:center;gap:10px;padding:20px 18px 14px}
+.sb-marca b{font-size:20px;letter-spacing:.5px}
+.sb-marca small{display:block;opacity:.7;font-size:12px}
+.sb-suc{margin:4px 14px 12px}
+.sb-suc label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;opacity:.7}
+.sb-suc select{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);margin-top:4px}
+.sb-suc select option{color:#111}
+#nav{flex:1;overflow:auto;padding:4px 10px}
+.nav-btn{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border:none;color:rgba(255,255,255,.85);padding:11px 12px;border-radius:12px;cursor:pointer;font-size:15px;text-align:left;margin-bottom:2px}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-btn.activo{background:#fff;color:var(--azul);font-weight:600}
+.nav-btn .ico{width:22px;text-align:center}
+.sb-pie{padding:14px 16px;border-top:1px solid rgba(255,255,255,.12);font-size:13px}
+.sb-pie .rol{display:inline-block;background:var(--sol);color:#3b2600;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase}
+.sb-pie button{margin-top:10px;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer}
+main{flex:1;margin-left:248px;min-width:0}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(243,246,251,.92);backdrop-filter:blur(8px);display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--borde)}
+.topbar h2{margin:0;font-size:20px;font-weight:600}
+.topbar .sub{color:var(--muted);font-size:13px}
+#btnMenu{display:none;background:#fff;border:1px solid var(--borde);border-radius:10px;padding:6px 10px;font-size:18px;cursor:pointer}
+.contenido{padding:22px 24px 60px;max-width:1280px}
+#bannerDemo{background:var(--sol-claro);color:#7a4b00;border-bottom:1px solid #f3d9a4;padding:8px 24px;font-size:13px}
+#velo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35}
+
+/* ===== Cards ===== */
+.card{background:var(--card);border:1px solid var(--borde);border-radius:var(--radio);padding:18px 20px;box-shadow:var(--sombra);margin-bottom:18px}
+.card h3{margin:0 0 14px;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.card h3 .acciones{display:flex;gap:6px;flex-wrap:wrap}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);padding:16px 18px;box-shadow:var(--sombra);position:relative;overflow:hidden}
+.kpi .et{font-size:13px;color:var(--muted)}
+.kpi .val{font-size:26px;font-weight:600;margin-top:4px;letter-spacing:-.5px}
+.kpi .det{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:var(--azul-claro)}
+.kpi.sol::after{background:var(--sol-claro)}
+.kpi > *{position:relative;z-index:1}
+
+/* ===== Tablas ===== */
+.tabla-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;padding:8px 8px;border-bottom:1px solid var(--borde);white-space:nowrap}
+td{padding:8px 8px;border-bottom:1px solid #EEF0F3;vertical-align:middle}
+tr:hover td{background:#FAFBFD}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
+.vacio{padding:26px;text-align:center;color:var(--muted)}
+
+/* ===== Chips / badges ===== */
+.badge{display:inline-block;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-ok{background:var(--ok-claro);color:var(--ok)}
+.b-err{background:var(--err-claro);color:var(--err)}
+.b-warn{background:var(--warn-claro);color:var(--warn)}
+.b-azul{background:var(--azul-claro);color:var(--azul)}
+.b-gris{background:#F1F3F4;color:#5F6368}
+.b-sol{background:var(--sol-claro);color:#8a5a00}
+.ficha{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:4px;border:1px solid rgba(0,0,0,.15)}
+.ficha.gris{background:var(--gris-ficha)}.ficha.dorada{background:var(--dorada)}
+.seg{display:inline-flex;background:#F1F3F4;border-radius:12px;padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{border:none;background:transparent;padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:500;color:#444}
+.seg button.on{background:#fff;color:var(--azul);box-shadow:var(--sombra);font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip-ab{border:1.5px solid var(--azul2);background:var(--azul-claro);color:var(--azul);border-radius:12px;padding:8px 12px;cursor:pointer;text-align:left;font-size:13px;line-height:1.3}
+.chip-ab b{display:block;font-size:14px}
+.chip-ab.on{background:var(--azul);color:#fff}
+.chip-ab.no{border-color:var(--borde);background:#F8F9FA;color:#999;cursor:not-allowed}
+.barra{height:8px;background:#EEF0F3;border-radius:6px;overflow:hidden;min-width:70px}
+.barra > i{display:block;height:100%;background:linear-gradient(90deg,var(--azul2),var(--azul))}
+.barra.sol > i{background:linear-gradient(90deg,#FFC857,var(--sol))}
+
+/* ===== Formulario de carga ===== */
+.form-fila{display:grid;gap:12px;grid-template-columns:repeat(12,1fr);align-items:end}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c6{grid-column:span 6}.c4{grid-column:span 4}.c3{grid-column:span 3}
+.ac-wrap{position:relative}
+.ac-panel{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--borde);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:20;max-height:280px;overflow:auto}
+.ac-op{padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ac-op:hover,.ac-op.sel{background:var(--azul-claro)}
+.ac-op small{color:var(--muted)}
+.nota{font-size:13px;color:var(--muted)}
+.aviso{padding:10px 12px;border-radius:10px;font-size:13px;margin-top:10px}
+.aviso.warn{background:var(--warn-claro);color:var(--warn)}
+.aviso.info{background:var(--azul-claro);color:var(--azul)}
+.aviso.err{background:var(--err-claro);color:var(--err)}
+.dia-nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dia-nav input{width:auto}
+.linea{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #E5E7EB}
+.linea:last-child{border-bottom:none}
+.linea.total{font-weight:700;font-size:17px;border-top:2px solid var(--borde);border-bottom:none;padding-top:10px;margin-top:4px}
+.mini-input{width:120px;text-align:right;padding:6px 8px}
+.item-lista{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #F1F3F4;font-size:14px}
+.fila-rojo td{background:var(--err-claro)!important}
+.buscador{position:relative}
+.buscador input{padding-left:36px}
+.buscador::before{content:'🔎';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.6}
+.barras-eq .fila{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;margin:8px 0;font-size:14px}
+
+/* ===== Modal / toast ===== */
+#modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:40px 14px;overflow:auto}
+#modal.abierto{display:flex}
+.modal-box{background:#fff;border-radius:20px;width:100%;max-width:640px;box-shadow:0 25px 60px rgba(0,0,0,.3);animation:sube .18s ease-out}
+.modal-cab{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--borde)}
+.modal-cab h3{margin:0;font-size:18px}
+.modal-cuerpo{padding:18px 22px}
+.modal-pie{padding:14px 22px;border-top:1px solid var(--borde);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+@keyframes sube{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.ver{opacity:1}
+#toast.err{background:var(--err)}
+#toast.ok{background:var(--ok)}
+
+/* ===== Responsive ===== */
+@media (max-width:980px){
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.abierto{transform:none}
+  #sidebar.abierto ~ #velo{display:block}
+  main{margin-left:0}
+  #btnMenu{display:block}
+  .topbar{padding:12px 16px}
+  .contenido{padding:16px 16px 60px}
+  .g2,.g3{grid-template-columns:1fr}
+  .c8,.c6,.c4,.c3{grid-column:span 12}
+  .kpi .val{font-size:22px}
+  .card{padding:16px}
+  #bannerDemo{padding:8px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Pantalla de ingreso ===== -->
+<div id="login" class="oculto">
+  <div class="login-card">
+    <svg class="logo-sol" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="14" fill="#F5A623"/><g stroke="#F5A623" stroke-width="4" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="11"/><line x1="32" y1="53" x2="32" y2="60"/><line x1="4" y1="32" x2="11" y2="32"/><line x1="53" y1="32" x2="60" y2="32"/><line x1="12" y1="12" x2="17" y2="17"/><line x1="47" y1="47" x2="52" y2="52"/><line x1="12" y1="52" x2="17" y2="47"/><line x1="47" y1="17" x2="52" y2="12"/></g><circle cx="32" cy="32" r="8" fill="#0B3D91"/></svg>
+    <h1>Blue Sun</h1>
+    <p>Sistema de gestión del solarium</p>
+    <div class="campo"><label for="lgEmail">Email</label><input id="lgEmail" type="email" autocomplete="username"></div>
+    <div class="campo"><label for="lgPass">Contraseña</label><input id="lgPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')ingresar()"></div>
+    <button class="btn btn-pri btn-full" onclick="ingresar()">Ingresar</button>
+    <div style="text-align:center;margin-top:14px"><a href="#" onclick="olvideClave();return false">Olvidé mi contraseña</a></div>
+    <div id="lgError" class="aviso err oculto"></div>
+  </div>
+</div>
+
+<!-- ===== Cuenta sin rol ===== -->
+<div id="pendiente" class="oculto">
+  <div class="login-card">
+    <h1>⏳ Falta habilitarte</h1>
+    <p>Tu cuenta <b id="pendEmail"></b> todavía no tiene permisos. Avisale al administrador: ya le llegó tu solicitud y te habilita desde Configuración → Usuarios.</p>
+    <button class="btn btn-sec btn-full" onclick="salir()">Salir</button>
+  </div>
+</div>
+
+<!-- ===== App ===== -->
+<div id="app" class="oculto">
+  <aside id="sidebar">
+    <div class="sb-marca">
+      <svg width="38" height="38" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="14" fill="#F5A623"/><g stroke="#F5A623" stroke-width="4" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="11"/><line x1="32" y1="53" x2="32" y2="60"/><line x1="4" y1="32" x2="11" y2="32"/><line x1="53" y1="32" x2="60" y2="32"/><line x1="12" y1="12" x2="17" y2="17"/><line x1="47" y1="47" x2="52" y2="52"/><line x1="12" y1="52" x2="17" y2="47"/><line x1="47" y1="17" x2="52" y2="12"/></g></svg>
+      <div><b>BLUE SUN</b><small>Gestión de solarium</small></div>
+    </div>
+    <div class="sb-suc">
+      <label for="selSucursal">Sucursal</label>
+      <select id="selSucursal" onchange="cambiarSucursal(this.value)"></select>
+    </div>
+    <nav id="nav"></nav>
+    <div class="sb-pie">
+      <div id="sbUsuario"></div>
+      <span class="rol" id="sbRol"></span><br>
+      <button onclick="salir()">Salir</button>
+    </div>
+  </aside>
+  <div id="velo" onclick="toggleMenu(false)"></div>
+  <main>
+    <div id="bannerDemo" class="oculto">🧪 <b>Modo demo:</b> todavía no está conectado a Firebase. Los datos se guardan sólo en este navegador (sirve para probar).</div>
+    <div class="topbar">
+      <button id="btnMenu" onclick="toggleMenu()">☰</button>
+      <div><h2 id="tituloTab"></h2><div class="sub" id="subTab"></div></div>
+    </div>
+    <div class="contenido">
+      <section id="tab-inicio" class="tab"></section>
+      <section id="tab-dia" class="tab"></section>
+      <section id="tab-clientes" class="tab"></section>
+      <section id="tab-abonos" class="tab"></section>
+      <section id="tab-resumen" class="tab"></section>
+      <section id="tab-precios" class="tab"></section>
+      <section id="tab-config" class="tab"></section>
+    </div>
+  </main>
+</div>
+
+<div id="modal" onclick="if(event.target===this)cerrarModal()"><div class="modal-box" id="modalBox"></div></div>
+<div id="toast"></div>
+
+<!-- ===== INICIO SCRIPT PRINCIPAL ===== -->
+<script>
+'use strict';
+
+/* =========================================================
+   1. CONFIGURACIÓN
+   Pegá acá la configuración de tu proyecto de Firebase
+   (Firebase Console → ⚙️ Configuración del proyecto → Tus apps → SDK).
+   Mientras apiKey esté vacío, la app funciona en MODO DEMO
+   (guarda todo en el navegador).
+   ========================================================= */
+var FIREBASE_CONFIG = {
+  apiKey: '',
+  authDomain: '',
+  databaseURL: '',
+  projectId: '',
+  storageBucket: '',
+  messagingSenderId: '',
+  appId: ''
+};
+var ROOT = 'bluesun';                          // nodo raíz en Realtime Database
+var ADMIN_EMAIL = 'speranza.emiliano@gmail.com'; // primer administrador
+var MODO_DEMO = !FIREBASE_CONFIG.apiKey;
+
+/* =========================================================
+   2. UTILIDADES
+   ========================================================= */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+var _fmtPesos = new Intl.NumberFormat('es-AR', { style:'currency', currency:'ARS', maximumFractionDigits:0 });
+function $$(n){ return _fmtPesos.format(Math.round(Number(n) || 0)); }
+function num(v){ var n = parseFloat(String(v == null ? '' : v).replace(/\./g,'').replace(',','.')); return isNaN(n) ? 0 : n; }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function isoLocal(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function hoy(){ return isoLocal(new Date()); }
+function sumarDias(iso, n){ var p = iso.split('-'); return isoLocal(new Date(+p[0], +p[1]-1, +p[2] + n)); }
+function fmtF(iso){ if(!iso) return '—'; var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function fmtFCorta(iso){ if(!iso) return '—'; var p = iso.split('-'); return p[2] + '/' + p[1]; }
+function diasEntre(a, b){ var pa=a.split('-'), pb=b.split('-'); return Math.round((new Date(+pb[0],+pb[1]-1,+pb[2]) - new Date(+pa[0],+pa[1]-1,+pa[2])) / 86400000); }
+var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var DIAS_SEM = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function fmtLargo(iso){ var p = iso.split('-'); var d = new Date(+p[0], +p[1]-1, +p[2]); var t = DIAS_SEM[d.getDay()] + ' ' + (+p[2]) + ' de ' + MESES[+p[1]-1]; return t.charAt(0).toUpperCase() + t.slice(1); }
+function horaAhora(){ var d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+// Normalización para buscar: minúsculas, sin tildes, espacios simples
+function norm(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim(); }
+function coincide(consulta, texto){ var t = norm(texto); return norm(consulta).split(' ').filter(Boolean).every(function(w){ return t.indexOf(w) >= 0; }); }
+function ordenarPor(arr, fn){ return arr.slice().sort(function(a,b){ var x=fn(a), y=fn(b); return x < y ? -1 : x > y ? 1 : 0; }); }
+function conIds(obj){ obj = obj || {}; Object.keys(obj).forEach(function(k){ if(obj[k] && typeof obj[k] === 'object') obj[k].id = k; }); return obj; }
+function valores(obj){ return Object.keys(obj || {}).map(function(k){ var v = obj[k]; if(v && typeof v === 'object' && !v.id) v.id = k; return v; }); }
+
+var _toastT;
+function toast(msg, tipo){
+  var t = $('toast'); t.textContent = msg; t.className = 'ver ' + (tipo || '');
+  clearTimeout(_toastT); _toastT = setTimeout(function(){ t.className = ''; }, 3200);
+}
+function abrirModal(titulo, cuerpo, pie){
+  $('modalBox').innerHTML = '<div class="modal-cab"><h3>' + esc(titulo) + '</h3><button class="btn-icono" onclick="cerrarModal()">✕</button></div>' +
+    '<div class="modal-cuerpo">' + cuerpo + '</div>' + (pie ? '<div class="modal-pie">' + pie + '</div>' : '');
+  $('modal').classList.add('abierto');
+}
+function cerrarModal(){ $('modal').classList.remove('abierto'); }
+
+/* =========================================================
+   3. CAPA DE DATOS
+   Misma interfaz para Firebase y para el modo demo (localStorage).
+   Las rutas son relativas a ROOT.
+   ========================================================= */
+var DB = MODO_DEMO ? crearDBLocal() : crearDBFirebase();
+
+function crearDBFirebase(){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  var db = firebase.database();
+  function r(p){ return db.ref(ROOT + (p ? '/' + p : '')); }
+  return {
+    get: function(p){ return r(p).once('value').then(function(s){ return s.val(); }); },
+    // update multi-ruta: { 'clientes/abc': {...}, 'historial/abc/x': null }
+    update: function(obj){ var o = {}; Object.keys(obj).forEach(function(k){ o[ROOT + '/' + k] = obj[k]; }); return db.ref().update(o); },
+    range: function(p, a, b){ return r(p).orderByKey().startAt(a).endAt(b).once('value').then(function(s){ return s.val() || {}; }); },
+    ultimoHasta: function(p, b){ return r(p).orderByKey().endAt(b).limitToLast(1).once('value').then(function(s){ return s.val() || {}; }); },
+    incr: function(p, d){ return r(p).transaction(function(v){ return (v || 0) + d; }); },
+    key: function(){ return db.ref().push().key; }
+  };
+}
+
+function crearDBLocal(){
+  var K = 'bluesun_demo', t;
+  try { t = JSON.parse(localStorage.getItem(K)) || {}; } catch(e){ t = {}; }
+  function guardar(){ try { localStorage.setItem(K, JSON.stringify(t)); } catch(e){ toast('No se pudo guardar en el navegador', 'err'); } }
+  function partes(p){ return p ? p.split('/').filter(Boolean) : []; }
+  function copia(v){ return v == null ? null : JSON.parse(JSON.stringify(v)); }
+  function leer(p){ var n = t, ps = partes(p); for(var i = 0; i < ps.length; i++){ if(n == null || typeof n !== 'object') return null; n = n[ps[i]]; } return n === undefined ? null : n; }
+  function escribir(p, v){
+    var ps = partes(p), n = t;
+    if(!ps.length){ t = v || {}; return; }
+    for(var i = 0; i < ps.length - 1; i++){
+      if(n[ps[i]] == null || typeof n[ps[i]] !== 'object'){ if(v == null) return; n[ps[i]] = {}; }
+      n = n[ps[i]];
+    }
+    if(v == null) delete n[ps[ps.length-1]]; else n[ps[ps.length-1]] = copia(v);
+  }
+  return {
+    get: function(p){ return Promise.resolve(copia(leer(p))); },
+    update: function(obj){ Object.keys(obj).forEach(function(k){ escribir(k, obj[k]); }); guardar(); return Promise.resolve(); },
+    range: function(p, a, b){ var o = leer(p) || {}, r = {}; Object.keys(o).sort().forEach(function(k){ if(k >= a && k <= b) r[k] = o[k]; }); return Promise.resolve(copia(r)); },
+    ultimoHasta: function(p, b){ var o = leer(p) || {}, ks = Object.keys(o).filter(function(k){ return k <= b; }).sort(), r = {}; if(ks.length){ r[ks[ks.length-1]] = o[ks[ks.length-1]]; } return Promise.resolve(copia(r)); },
+    incr: function(p, d){ escribir(p, (leer(p) || 0) + d); guardar(); return Promise.resolve(); },
+    key: function(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); },
+    borrarTodo: function(){ t = {}; guardar(); }
+  };
+}
+
+/* =========================================================
+   4. DATOS INICIALES (se cargan la primera vez)
+   Precios sacados de la planilla de septiembre (Congreso).
+   Los marcados aConfirmar hay que revisarlos en Precios.
+   ========================================================= */
+var SEMILLA_EQUIPOS = [
+  { id:'bluesun',   nombre:'Blue Sun',  ficha:'gris',   orden:1 },
+  { id:'f9000',     nombre:'F9000',     ficha:'dorada', orden:2 },
+  { id:'evolution', nombre:'Evolution', ficha:'dorada', orden:3 },
+  { id:'diablito',  nombre:'Diablito',  ficha:'dorada', orden:4 },
+  { id:'orbit',     nombre:'Orbit',     ficha:'dorada', orden:5 },
+  { id:'diva',      nombre:'Diva',      ficha:'dorada', orden:6 }
+];
+var SEMILLA_SESIONES = { bluesun:[23900,26500], f9000:[17100,19000], evolution:[27200,34000], diablito:[15300,17000], orbit:[21600,24000], diva:[23200,29000] };
+// Abonos vistos en la planilla: [efectivo, tarjeta]
+var SEMILLA_ABONOS_VISTOS = { 'f9000-5':[85500,85500], 'bluesun-5':[119250,119250], 'orbit-5':[108000,108000], 'bluesun-10':[212000,212000], 'evolution-5':[153000,153000], 'orbit-10':[192000,192000], 'evolution-20':[479000,479000] };
+
+// Clientes de la planilla SEPTIEMBRE_SOLARIUM_CONGRESO (limpios y unificados)
+var CLIENTES_PLANILLA = [["ACERBO VERONICA", ""], ["ACHILLE ROMINA", ""], ["ACRI MARIANA", ""], ["AGUERO MARIA", "¿es la misma que AGUERO MARIELA?"], ["AGUERO MARIELA", "¿es la misma que AGUERO MARIA?"], ["AMIGO SILVIA", ""], ["BAGGIO OLIVIA", ""], ["BALLESTERO CRISTINA", ""], ["BARNERO PABLO", ""], ["BORDALEJO MARCO", ""], ["BOZ ANTONIO", ""], ["BUAROTI LILIANA", ""], ["CABALIERI SILVINA", ""], ["CALACHONRA AGUSTINA", ""], ["CARUCCI IVAN", ""], ["CASAL ALDANA", ""], ["CHEDRESE VALENTINA", ""], ["COLODNER DIANA", ""], ["CONSENTINO FEDERICA", ""], ["CORREA AGOSTINA", ""], ["CRISTIANO LORENA", ""], ["CUAGLIA DELFINA", ""], ["CUNAT ASTRID", ""], ["DA SILVA ELVIRA", ""], ["DA SILVIA", ""], ["DALESANDRO MARIA", ""], ["DANILLUC ADRIAN", ""], ["DELFINA", "nombre incompleto (¿Giacchino Delfina?)"], ["DELGADO LUCIA", ""], ["DI ROMANO JUAN", ""], ["DOMENECH SANTIAGO", ""], ["DRAGONETI MAGALI", ""], ["DUBOIS CAROLINA", ""], ["DUVERGUES CAROLINA", ""], ["FALLAS BLANCA", ""], ["FERNANDEZ MARTA", ""], ["FERRO DAIANA", ""], ["FLEUDE YASMIN", ""], ["FONES HERNAN", ""], ["FONZI MAXI", ""], ["FORNAN HERNAN", ""], ["FRAGATA HUGO", ""], ["FUSI EZEQUIEL", ""], ["GALFRASCOELI LEANDRO", ""], ["GALLY ABRIL", ""], ["GEIACCHIO DELFINA", ""], ["GUIDO PAOLA", ""], ["IBARRA MAJO", ""], ["IBARRA MARIA", ""], ["ISA", "nombre incompleto"], ["JURADO FLORENCIA", ""], ["LASANOF JUAN", ""], ["LAZARTE MARIA", ""], ["LOPEZ BARBARA", ""], ["LOPEZ MONICA", ""], ["LOVERA ALEJANDRO", ""], ["LOZANOF JUAN", ""], ["MACA", "aparece también en RETIROS: ¿empleada/dueña?"], ["MAGUNA LARA", ""], ["MANCUSO CONI", ""], ["MARTINEZ CRISTIAN", ""], ["MARTINNEZ MARIANO", ""], ["MEDINA MARIANA", ""], ["MENENDEZ MARTIN", ""], ["MERLINO MARTINA", ""], ["MILIANTE VERONICA", ""], ["MOBILIO ELBA", ""], ["MONTIEL ANGEL", ""], ["MOSTEIRI MATIAS", ""], ["MUNOS MERCEDES", ""], ["NEGRO OSCAR", ""], ["OJEDA MARIA", ""], ["OTERO MICAELA", ""], ["OTOMANO ROXANA", ""], ["OTTOMANO RASANA", ""], ["PICCIONE JULIETA", ""], ["PINEIRO LUCAS", ""], ["POZUETA VANESA", ""], ["QUINTERO GUILLERMO", ""], ["RACANELO PATRICIA", ""], ["RAFA JUANA", ""], ["RAMIREZ AMANCAI", ""], ["RAMOS EDUARDO", ""], ["ROBERTO", "nombre incompleto (¿Seta Roberto?)"], ["ROBLES CAMILA", ""], ["RODRIGUEZ EDUARDO", ""], ["RODRIGUEZ FLORENCIA", ""], ["RODRIGUEZ LURDES", ""], ["RODRIGUEZ NOELIA", ""], ["ROMANIUK SOLANGE", ""], ["SALDIVAR ALEJANDRO", ""], ["SATO LETICIA", ""], ["SAVILIA ALEJANDRO", ""], ["SETA ROBERTO", ""], ["SOLEDAD DE PASO", ""], ["SOLIS JOSE", ""], ["SOSA CLAUDIA", ""], ["SPERANZA EMILIANO", ""], ["TOMINI NAHUEL", ""], ["TROTALORET VALENTINA", ""], ["TROTTA VALENTINA", ""], ["VILAR ESTELA", ""], ["WUALTOS FEDERICO", ""], ["ZAVAGLIA MARIANA", ""], ["ZUBIMENDI MARIA", ""]];
+
+function armarSemilla(){
+  var u = {};
+  SEMILLA_EQUIPOS.forEach(function(e){ u['equipos/' + e.id] = { nombre:e.nombre, ficha:e.ficha, orden:e.orden, activo:true }; });
+  SEMILLA_EQUIPOS.forEach(function(e){
+    var p = SEMILLA_SESIONES[e.id];
+    u['servicios/ses-' + e.id] = { nombre:'Sesión ' + e.nombre, tipo:'sesion', equipoId:e.id, precioEfectivo:p[0], precioTarjeta:p[1], activo:true, orden:e.orden };
+    [5,10,20].forEach(function(n){
+      var v = SEMILLA_ABONOS_VISTOS[e.id + '-' + n];
+      u['servicios/ab' + n + '-' + e.id] = { nombre:'Abono x' + n + ' ' + e.nombre, tipo:'abono', equipoId:e.id, sesiones:n, dias:'',
+        precioEfectivo: v ? v[0] : 0, precioTarjeta: v ? v[1] : 0, aConfirmar:true, activo:true, orden:e.orden * 10 + n };
+    });
+  });
+  u['servicios/prod-sobre'] = { nombre:'Sobre', tipo:'producto', precioEfectivo:10000, precioTarjeta:12000, activo:true, orden:1 };
+  u['servicios/prod-acelerador'] = { nombre:'Tarro acelerador', tipo:'producto', precioEfectivo:55000, precioTarjeta:55000, aConfirmar:true, activo:true, orden:2 };
+  u['servicios/prod-varios'] = { nombre:'Varios', tipo:'producto', precioEfectivo:0, precioTarjeta:0, activo:true, orden:3 };
+  u['sucursales/congreso'] = { nombre:'Congreso', direccion:'Hipólito Yrigoyen 1800, CABA', activa:true, orden:1 };
+  u['config/general'] = { abonoMultiLocalDefault:false, diasAvisoVencimiento:7 };
+  return u;
+}
+
+/* =========================================================
+   5. ESTADO
+   ========================================================= */
+var S = {
+  uid:'', email:'', rol:'', sucUsuario:'', suc:'',
+  sucursales:{}, equipos:{}, servicios:{}, clientes:{}, abonos:{}, config:{},
+  tab:'inicio', fecha:hoy()
+};
+function esAdmin(){ return S.rol === 'admin'; }
+function puedeCargar(){ return S.rol === 'admin' || S.rol === 'recepcion'; }
+function cfg(){ return S.config.general || { abonoMultiLocalDefault:false, diasAvisoVencimiento:7 }; }
+function listaEquipos(soloActivos){ return ordenarPor(valores(S.equipos).filter(function(e){ return !soloActivos || e.activo !== false; }), function(e){ return e.orden || 99; }); }
+function listaSucursales(soloActivas){ return ordenarPor(valores(S.sucursales).filter(function(s){ return !soloActivas || s.activa !== false; }), function(s){ return (s.orden || 99) + s.nombre; }); }
+function nombreSuc(id){ return S.sucursales[id] ? S.sucursales[id].nombre : (id || '—'); }
+function nombreEquipo(id){ return S.equipos[id] ? S.equipos[id].nombre : '—'; }
+function precioDe(serv, forma){ if(!serv) return 0; return forma === 'efectivo' ? (serv.precioEfectivo || 0) : (serv.precioTarjeta || 0); } // transferencia = precio tarjeta
+
+function cargarCatalogos(){
+  return Promise.all(['sucursales','equipos','servicios','clientes','abonos','config'].map(function(k){ return DB.get(k); }))
+    .then(function(r){
+      S.sucursales = conIds(r[0]); S.equipos = conIds(r[1]); S.servicios = conIds(r[2]);
+      S.clientes = conIds(r[3]); S.abonos = conIds(r[4]); S.config = r[5] || {};
+      if(!Object.keys(S.equipos).length && esAdmin()){
+        return DB.update(armarSemilla()).then(function(){ toast('Se cargaron los equipos y precios iniciales', 'ok'); return cargarCatalogos(); });
+      }
+    });
+}
+
+/* =========================================================
+   6. INGRESO / ROLES
+   ========================================================= */
+function mostrarPantalla(id){ ['login','pendiente','app'].forEach(function(x){ $(x).classList.toggle('oculto', x !== id); }); }
+
+function ingresar(){
+  var e = $('lgEmail').value.trim(), p = $('lgPass').value;
+  $('lgError').classList.add('oculto');
+  firebase.auth().signInWithEmailAndPassword(e, p).catch(function(err){
+    $('lgError').textContent = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' ? 'Email o contraseña incorrectos.' : ('No se pudo ingresar: ' + err.message);
+    $('lgError').classList.remove('oculto');
+  });
+}
+function olvideClave(){
+  var e = $('lgEmail').value.trim();
+  if(!e){ toast('Escribí tu email arriba primero'); return; }
+  firebase.auth().sendPasswordResetEmail(e).then(function(){ toast('Te mandamos un mail para cambiar la contraseña', 'ok'); })
+    .catch(function(err){ toast(err.message, 'err'); });
+}
+function salir(){ if(MODO_DEMO){ location.reload(); return; } firebase.auth().signOut(); }
+
+function arrancar(){
+  if(MODO_DEMO){
+    S.uid = 'demo'; S.email = 'demo@bluesun'; S.rol = 'admin';
+    $('bannerDemo').classList.remove('oculto');
+    iniciarApp();
+    return;
+  }
+  firebase.auth().onAuthStateChanged(function(u){
+    if(!u){ mostrarPantalla('login'); return; }
+    S.uid = u.uid; S.email = u.email || '';
+    DB.get('roles/' + u.uid).then(function(rol){
+      if((!rol || !rol.rol) && S.email.toLowerCase() === ADMIN_EMAIL){
+        rol = { rol:'admin', email:S.email, sucursal:'' };
+        return DB.update({ ['roles/' + u.uid]: rol }).then(function(){ return rol; });
+      }
+      return rol;
+    }).then(function(rol){
+      if(!rol || !rol.rol){
+        DB.update({ ['solicitudes/' + u.uid]: { email:S.email, fecha:new Date().toISOString() } }).catch(function(){});
+        $('pendEmail').textContent = S.email;
+        mostrarPantalla('pendiente');
+        return;
+      }
+      S.rol = rol.rol; S.sucUsuario = rol.sucursal || '';
+      iniciarApp();
+    }).catch(function(err){ toast('Error leyendo permisos: ' + err.message, 'err'); mostrarPantalla('login'); });
+  });
+}
+
+function iniciarApp(){
+  mostrarPantalla('app');
+  $('sbUsuario').textContent = S.email;
+  $('sbRol').textContent = { admin:'Administrador', recepcion:'Recepción', lector:'Sólo lectura' }[S.rol] || S.rol;
+  cargarCatalogos().then(function(){
+    elegirSucursalInicial();
+    armarNav();
+    var t = 'inicio'; try { t = localStorage.getItem('bs_tab') || 'inicio'; } catch(e){}
+    if(!TABS[t] || !TABS[t].visible()) t = 'inicio';
+    mostrarTab(t);
+  }).catch(function(err){ toast('Error cargando datos: ' + err.message, 'err'); });
+}
+
+function elegirSucursalInicial(){
+  var sucs = listaSucursales(true);
+  var sel = $('selSucursal');
+  if(S.rol === 'recepcion' && S.sucUsuario){
+    S.suc = S.sucUsuario;
+    sel.innerHTML = '<option value="' + esc(S.suc) + '">' + esc(nombreSuc(S.suc)) + '</option>';
+    sel.disabled = true;
+    return;
+  }
+  var guardada = ''; try { guardada = localStorage.getItem('bs_suc') || ''; } catch(e){}
+  S.suc = sucs.some(function(s){ return s.id === guardada; }) ? guardada : (sucs[0] ? sucs[0].id : '');
+  sel.disabled = false;
+  sel.innerHTML = sucs.length ? sucs.map(function(s){ return '<option value="' + esc(s.id) + '"' + (s.id === S.suc ? ' selected' : '') + '>' + esc(s.nombre) + '</option>'; }).join('')
+    : '<option value="">(sin sucursales)</option>';
+}
+function cambiarSucursal(id){ S.suc = id; try { localStorage.setItem('bs_suc', id); } catch(e){} mostrarTab(S.tab); }
+
+/* =========================================================
+   7. NAVEGACIÓN
+   ALL_TABS: si agregás una pantalla, sumala acá y en el HTML.
+   ========================================================= */
+var TABS = {
+  inicio:   { ico:'🏠', titulo:'Inicio',            visible:function(){ return true; },            render:function(){ renderInicio(); } },
+  dia:      { ico:'📋', titulo:'Planilla del día',  visible:function(){ return true; },            render:function(){ renderDia(); } },
+  clientes: { ico:'👥', titulo:'Clientes',          visible:function(){ return true; },            render:function(){ renderClientes(); } },
+  abonos:   { ico:'🎟️', titulo:'Abonos',            visible:function(){ return true; },            render:function(){ renderAbonos(); } },
+  resumen:  { ico:'📊', titulo:'Resumen del mes',   visible:function(){ return S.rol !== 'recepcion'; }, render:function(){ renderResumen(); } },
+  precios:  { ico:'💲', titulo:'Precios y equipos', visible:function(){ return esAdmin(); },       render:function(){ renderPrecios(); } },
+  config:   { ico:'⚙️', titulo:'Configuración',     visible:function(){ return esAdmin(); },       render:function(){ renderConfig(); } }
+};
+var ALL_TABS = Object.keys(TABS);
+
+function armarNav(){
+  $('nav').innerHTML = ALL_TABS.filter(function(t){ return TABS[t].visible(); }).map(function(t){
+    return '<button class="nav-btn" id="nav-' + t + '" onclick="mostrarTab(\'' + t + '\')"><span class="ico">' + TABS[t].ico + '</span>' + TABS[t].titulo + '</button>';
+  }).join('');
+}
+function mostrarTab(t){
+  S.tab = t;
+  try { localStorage.setItem('bs_tab', t); } catch(e){}
+  ALL_TABS.forEach(function(x){
+    $('tab-' + x).classList.toggle('oculto', x !== t);
+    var b = $('nav-' + x); if(b) b.classList.toggle('activo', x === t);
+  });
+  $('tituloTab').textContent = TABS[t].titulo;
+  $('subTab').textContent = S.suc ? ('Sucursal ' + nombreSuc(S.suc)) : '';
+  toggleMenu(false);
+  cerrarModal();
+  TABS[t].render();
+}
+function toggleMenu(forzar){ var sb = $('sidebar'); sb.classList.toggle('abierto', forzar === undefined ? !sb.classList.contains('abierto') : forzar); }
+
+/* =========================================================
+   8. ABONOS — lógica común
+   ========================================================= */
+function estadoAbono(a){
+  var saldo = (a.sesiones || 0) - (a.usadas || 0);
+  if(saldo <= 0) return { cod:'agotado', txt:'Agotado', cls:'b-gris', saldo:0 };
+  if(a.vence && a.vence < hoy()) return { cod:'vencido', txt:'Vencido', cls:'b-err', saldo:saldo };
+  if(a.vence && diasEntre(hoy(), a.vence) <= (cfg().diasAvisoVencimiento || 7)) return { cod:'porvencer', txt:'Vence ' + fmtFCorta(a.vence), cls:'b-warn', saldo:saldo };
+  return { cod:'activo', txt:'Activo', cls:'b-ok', saldo:saldo };
+}
+function abonosDeCliente(cid){ return valores(S.abonos).filter(function(a){ return a.clienteId === cid; }); }
+function abonoUsableAca(a){ return a.multiLocal || a.sucursalId === S.suc; }
+
+/* =========================================================
+   9. INICIO
+   ========================================================= */
+function renderInicio(){
+  var cont = $('tab-inicio');
+  cont.innerHTML = '<div class="vacio">Cargando…</div>';
+  if(!S.suc){ cont.innerHTML = avisoSinSucursal(); return; }
+  var f = hoy(), mes = f.slice(0,7);
+  Promise.all([ DB.get('movimientos/' + S.suc + '/' + f), DB.range('movimientos/' + S.suc, mes + '-01', mes + '-31'), DB.get('cajas/' + S.suc + '/' + f) ])
+  .then(function(r){
+    var movs = valores(r[0] || {}), movMes = [], caja = r[2] || {};
+    Object.keys(r[1] || {}).forEach(function(d){ movMes = movMes.concat(valores(r[1][d])); });
+    var tot = totalesMovs(movs), totMes = totalesMovs(movMes);
+    var abs = valores(S.abonos);
+    var dAviso = cfg().diasAvisoVencimiento || 7;
+    var porVencer = ordenarPor(abs.filter(function(a){ var e = estadoAbono(a); return e.cod === 'porvencer'; }), function(a){ return a.vence; });
+    var ultima = abs.filter(function(a){ var e = estadoAbono(a); return e.saldo === 1 && e.cod !== 'vencido'; });
+    var activos = abs.filter(function(a){ var e = estadoAbono(a); return e.cod === 'activo' || e.cod === 'porvencer'; });
+    var maxEq = Math.max.apply(null, [1].concat(listaEquipos().map(function(e){ return tot.porEquipo[e.id] || 0; })));
+
+    cont.innerHTML =
+      '<div class="card" style="background:linear-gradient(120deg,#0B3D91,#1565C0);color:#fff;border:none">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
+        '<div><div style="opacity:.8;font-size:14px">' + esc(fmtLargo(f)) + '</div>' +
+        '<div style="font-size:24px;font-weight:600;margin-top:2px">¡Hola! ☀️ Blue Sun ' + esc(nombreSuc(S.suc)) + '</div></div>' +
+        (puedeCargar() ? '<button class="btn btn-sol" onclick="S.fecha=hoy();mostrarTab(\'dia\')">＋ Anotar una sesión</button>' : '') +
+      '</div></div>' +
+      '<div class="grid g4" style="margin-bottom:18px">' +
+        kpi('Sesiones hoy', tot.sesiones, 'Grises ' + tot.fichas.gris + ' · Doradas ' + tot.fichas.dorada) +
+        kpi('Cobrado hoy', $$(tot.total), 'Efvo ' + $$(tot.efectivo) + ' · Tarj/Transf ' + $$(tot.tarjeta + tot.transferencia), 'sol') +
+        kpi('Cobrado en el mes', $$(totMes.total), totMes.sesiones + ' sesiones en ' + MESES[+mes.slice(5)-1]) +
+        kpi('Abonos activos', activos.length, porVencer.length + ' por vencer · ' + ultima.length + ' en su última sesión', 'sol') +
+      '</div>' +
+      '<div class="grid g2">' +
+        '<div class="card"><h3>Sesiones de hoy por equipo</h3><div class="barras-eq">' +
+          listaEquipos(true).map(function(e){ var n = tot.porEquipo[e.id] || 0;
+            return '<div class="fila"><span><span class="ficha ' + e.ficha + '"></span>' + esc(e.nombre) + '</span><div class="barra' + (e.ficha === 'gris' ? '' : ' sol') + '"><i style="width:' + (n / maxEq * 100) + '%"></i></div><b style="text-align:right">' + n + '</b></div>';
+          }).join('') +
+        '</div>' + (caja.observaciones ? '<div class="aviso info">📝 ' + esc(caja.observaciones) + '</div>' : '') + '</div>' +
+        '<div class="card"><h3>⏰ Abonos por vencer <span class="nota">próximos ' + dAviso + ' días</span></h3>' + listaAbonosCorta(porVencer, 'Ningún abono vence en estos días. 👌') + '</div>' +
+      '</div>' +
+      '<div class="card"><h3>🔔 Última sesión del abono <span class="nota">ofreceles renovar</span></h3>' + listaAbonosCorta(ultima, 'Nadie está en su última sesión.') + '</div>';
+  }).catch(errorCarga);
+}
+function kpi(et, val, det, cls){ return '<div class="kpi ' + (cls || '') + '"><div class="et">' + esc(et) + '</div><div class="val">' + esc(val) + '</div><div class="det">' + esc(det || '') + '</div></div>'; }
+function listaAbonosCorta(lista, vacio){
+  if(!lista.length) return '<div class="vacio">' + esc(vacio) + '</div>';
+  return '<div class="tabla-wrap"><table><tbody>' + lista.slice(0, 12).map(function(a){
+    var e = estadoAbono(a), c = S.clientes[a.clienteId] || {};
+    return '<tr><td><a href="#" onclick="verCliente(\'' + a.clienteId + '\');return false"><b>' + esc(c.nombre || a.clienteNombre) + '</b></a><br><span class="nota">' + esc(a.nombre) + ' · ' + esc(nombreSuc(a.sucursalId)) + '</span></td>' +
+      '<td class="num">' + e.saldo + ' de ' + a.sesiones + '</td><td><span class="badge ' + e.cls + '">' + esc(e.txt) + '</span></td>' +
+      '<td>' + botonWhatsapp(c.telefono) + '</td></tr>';
+  }).join('') + '</tbody></table></div>';
+}
+function botonWhatsapp(tel){
+  var d = String(tel || '').replace(/\D/g, '');
+  if(!d) return '';
+  if(d.indexOf('54') !== 0) d = '549' + d.replace(/^0/, '');
+  return '<a class="btn-icono" title="WhatsApp" target="_blank" rel="noopener" href="https://wa.me/' + d + '">💬</a>';
+}
+function avisoSinSucursal(){ return '<div class="card"><div class="vacio">Todavía no hay sucursales cargadas.' + (esAdmin() ? ' Andá a <a href="#" onclick="mostrarTab(\'config\');return false">Configuración</a> y creá la primera.' : '') + '</div></div>'; }
+function errorCarga(err){ console.error(err); toast('Error: ' + (err && err.message || err), 'err'); }
+
+// Totales de una lista de movimientos
+function totalesMovs(movs){
+  var t = { efectivo:0, tarjeta:0, transferencia:0, total:0, sesiones:0, conAbono:0, fichas:{ gris:0, dorada:0 }, porEquipo:{}, abonosVendidos:0 };
+  movs.forEach(function(m){
+    var imp = Number(m.importe) || 0;
+    if(m.forma === 'efectivo') t.efectivo += imp;
+    else if(m.forma === 'tarjeta') t.tarjeta += imp;
+    else if(m.forma === 'transferencia') t.transferencia += imp;
+    if(m.forma !== 'abono') t.total += imp;
+    if(m.abonoCreadoId) t.abonosVendidos++;
+    if(m.sesion && m.equipoId){
+      t.sesiones++;
+      if(m.forma === 'abono') t.conAbono++;
+      t.porEquipo[m.equipoId] = (t.porEquipo[m.equipoId] || 0) + 1;
+      var eq = S.equipos[m.equipoId];
+      if(eq) t.fichas[eq.ficha === 'gris' ? 'gris' : 'dorada']++;
+    }
+  });
+  return t;
+}
+
+/* =========================================================
+   10. PLANILLA DEL DÍA
+   ========================================================= */
+var D = { movs:{}, caja:{}, prev:null };      // datos del día cargado
+var F = {};                                    // estado del formulario de carga
+
+function renderDia(){
+  var cont = $('tab-dia');
+  if(!S.suc){ cont.innerHTML = avisoSinSucursal(); return; }
+  cont.innerHTML = '<div class="vacio">Cargando…</div>';
+  cargarDia().then(pintarDia).catch(errorCarga);
+}
+function cargarDia(){
+  return Promise.all([
+    DB.get('movimientos/' + S.suc + '/' + S.fecha),
+    DB.get('cajas/' + S.suc + '/' + S.fecha),
+    DB.ultimoHasta('cajas/' + S.suc, sumarDias(S.fecha, -1))
+  ]).then(function(r){
+    D.movs = r[0] || {}; D.caja = r[1] || {};
+    var k = Object.keys(r[2] || {})[0];
+    D.prev = k ? { fecha:k, caja:r[2][k] } : null;
+  });
+}
+function pintarDia(){
+  var cont = $('tab-dia');
+  var soloLectura = !puedeCargar();
+  cont.innerHTML =
+    '<div class="card"><div class="dia-nav">' +
+      '<button class="btn btn-sec btn-chico" onclick="moverDia(-1)">◀</button>' +
+      '<input type="date" id="diaFecha" value="' + S.fecha + '" onchange="S.fecha=this.value;renderDia()">' +
+      '<button class="btn btn-sec btn-chico" onclick="moverDia(1)">▶</button>' +
+      (S.fecha !== hoy() ? '<button class="btn btn-sec btn-chico" onclick="S.fecha=hoy();renderDia()">Hoy</button>' : '') +
+      '<span style="margin-left:auto;font-weight:600">' + esc(fmtLargo(S.fecha)) + '</span>' +
+    '</div></div>' +
+    (soloLectura ? '' : '<div class="card" id="diaForm"></div>') +
+    '<div class="card"><h3>Movimientos del día <span class="acciones" id="diaTotalesMini"></span></h3><div id="diaMovs"></div></div>' +
+    '<div class="grid g2"><div class="card" id="diaCaja"></div><div class="card" id="diaFichas"></div></div>';
+  if(!soloLectura) pintarFormulario();
+  pintarMovs(); pintarCaja(); pintarFichas();
+}
+function moverDia(n){ S.fecha = sumarDias(S.fecha, n); renderDia(); }
+
+/* ---------- Formulario de carga ---------- */
+function formVacio(){ return { clienteId:'', clienteTexto:'', abonoId:'', servicioId:'', forma:'efectivo', importe:'', usaPrimera:true, multiLocal:!!cfg().abonoMultiLocalDefault, vence:'', nota:'' }; }
+function pintarFormulario(){
+  if(!F.forma) F = formVacio();
+  var serv = S.servicios[F.servicioId];
+  var usandoAbono = !!F.abonoId;
+  var servs = valores(S.servicios).filter(function(s){ return s.activo !== false; });
+  function grupo(tipo, et){
+    var l = ordenarPor(servs.filter(function(s){ return s.tipo === tipo; }), function(s){ return s.orden || 99; });
+    return l.length ? '<optgroup label="' + et + '">' + l.map(function(s){ return '<option value="' + esc(s.id) + '"' + (s.id === F.servicioId ? ' selected' : '') + '>' + esc(s.nombre) + '</option>'; }).join('') + '</optgroup>' : '';
+  }
+  var html = '<h3>＋ Anotar</h3><div class="form-fila">' +
+    '<div class="c6 campo" style="margin:0"><label>Cliente</label><div class="ac-wrap">' +
+      '<input id="fCli" autocomplete="off" placeholder="Buscar por nombre o teléfono…" value="' + esc(F.clienteTexto) + '" oninput="fCliInput(this.value)" onkeydown="fCliTecla(event)" onfocus="fCliInput(this.value)" onblur="setTimeout(cerrarAc,180)">' +
+      '<div id="fCliPanel" class="ac-panel oculto"></div></div></div>' +
+    '<div class="c6 campo" style="margin:0"><label>Servicio</label><select id="fServ" onchange="fServCambio(this.value)"' + (usandoAbono ? ' disabled' : '') + '><option value="">— Elegí —</option>' +
+      grupo('sesion','Sesiones') + grupo('abono','Abonos') + grupo('producto','Productos') + '</select></div>' +
+    '</div>';
+  // Abonos del cliente
+  if(F.clienteId){
+    var abs = abonosDeCliente(F.clienteId).filter(function(a){ return estadoAbono(a).cod !== 'agotado'; });
+    if(abs.length){
+      html += '<div style="margin-top:14px"><div class="nota" style="margin-bottom:6px">Abonos de este cliente — tocá uno para descontar la sesión:</div><div class="chips">' +
+        abs.map(function(a){
+          var e = estadoAbono(a), ok = abonoUsableAca(a);
+          var det = e.saldo + ' de ' + a.sesiones + ' · ' + (a.vence ? 'vence ' + fmtFCorta(a.vence) : 'sin vencimiento') + (ok ? '' : ' · sólo ' + nombreSuc(a.sucursalId));
+          return '<button class="chip-ab' + (F.abonoId === a.id ? ' on' : '') + (ok ? '' : ' no') + '" ' + (ok ? 'onclick="fUsarAbono(\'' + a.id + '\')"' : 'disabled') + '><b>' + esc(a.nombre) + (e.cod === 'vencido' ? ' ⚠️' : '') + '</b>' + esc(det) + '</button>';
+        }).join('') + '</div></div>';
+    }
+  }
+  if(usandoAbono){
+    var ab = S.abonos[F.abonoId], ea = estadoAbono(ab);
+    html += '<div class="aviso info">🎟️ Se descuenta 1 sesión de <b>' + esc(ab.nombre) + '</b>. Le quedarán <b>' + (ea.saldo - 1) + '</b>.' +
+      ' <a href="#" onclick="F.abonoId=\'\';F.servicioId=\'\';pintarFormulario();return false">Cancelar</a></div>';
+    if(ea.cod === 'vencido') html += '<div class="aviso warn">⚠️ Este abono venció el ' + fmtF(ab.vence) + '. Si lo usás igual, queda registrado.</div>';
+  } else {
+    html += '<div class="form-fila" style="margin-top:12px">' +
+      '<div class="c6 campo" style="margin:0"><label>Forma de pago</label><div class="seg">' +
+        ['efectivo','tarjeta','transferencia'].map(function(f){ return '<button class="' + (F.forma === f ? 'on' : '') + '" onclick="fForma(\'' + f + '\')">' + { efectivo:'💵 Efectivo', tarjeta:'💳 Tarjeta', transferencia:'🏦 Transf.' }[f] + '</button>'; }).join('') +
+      '</div></div>' +
+      '<div class="c3 campo" style="margin:0"><label>Importe</label><input id="fImp" inputmode="numeric" value="' + esc(F.importe) + '" oninput="F.importe=this.value"></div>' +
+      '<div class="c3 campo" style="margin:0"><label>Nota (opcional)</label><input id="fNota" value="' + esc(F.nota) + '" oninput="F.nota=this.value"></div>' +
+    '</div>';
+    if(serv && serv.aConfirmar) html += '<div class="aviso warn">⚠️ El precio de «' + esc(serv.nombre) + '» está sin confirmar. Revisalo en Precios.</div>';
+    if(serv && serv.tipo === 'abono'){
+      html += '<div class="form-fila" style="margin-top:12px">' +
+        '<div class="c4"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" ' + (F.usaPrimera ? 'checked' : '') + ' onchange="F.usaPrimera=this.checked"> Usa la 1ª sesión hoy</label></div>' +
+        '<div class="c4"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" ' + (F.multiLocal ? 'checked' : '') + ' onchange="F.multiLocal=this.checked"> Se puede usar en otros locales</label></div>' +
+        '<div class="c4 campo" style="margin:0"><label>Vence</label><input type="date" value="' + esc(F.vence) + '" onchange="F.vence=this.value"></div>' +
+      '</div>' + (serv.dias ? '' : '<div class="nota" style="margin-top:6px">Este abono no tiene duración configurada: dejá «Vence» vacío si no vence, o poné la fecha a mano.</div>');
+    }
+  }
+  html += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
+    '<button class="btn btn-sec" onclick="F=formVacio();pintarFormulario()">Limpiar</button>' +
+    '<button class="btn btn-pri" id="btnGuardarMov" onclick="guardarMov()">Guardar</button></div>';
+  $('diaForm').innerHTML = html;
+}
+
+var _acSel = 0, _acLista = [];
+function fCliInput(v){
+  F.clienteTexto = v;
+  if(F.clienteId && S.clientes[F.clienteId] && S.clientes[F.clienteId].nombre !== v){ F.clienteId = ''; F.abonoId = ''; }
+  var q = v.trim();
+  var panel = $('fCliPanel');
+  if(!q){ panel.classList.add('oculto'); return; }
+  var qd = q.replace(/\D/g, '');
+  _acLista = valores(S.clientes).filter(function(c){
+    return coincide(q, c.nombre) || (qd.length >= 3 && String(c.telefono || '').replace(/\D/g, '').indexOf(qd) >= 0);
+  });
+  var nq = norm(q);
+  _acLista = ordenarPor(_acLista, function(c){ var n = norm(c.nombre); return (n === nq ? '0' : n.indexOf(nq) === 0 ? '1' : '2') + n; }).slice(0, 8);
+  _acSel = 0;
+  var html = _acLista.map(function(c, i){
+    var abs = abonosDeCliente(c.id).filter(function(a){ var e = estadoAbono(a).cod; return e === 'activo' || e === 'porvencer'; });
+    return '<div class="ac-op' + (i === 0 ? ' sel' : '') + '" onmousedown="fElegirCliente(\'' + c.id + '\')"><span>' + esc(c.nombre) + '</span>' +
+      (abs.length ? '<span class="badge b-azul">🎟️ ' + abs.length + ' abono' + (abs.length > 1 ? 's' : '') + '</span>' : '<small>' + esc(c.telefono || '') + '</small>') + '</div>';
+  }).join('');
+  html += '<div class="ac-op" onmousedown="nuevoClienteDesdeForm()" style="color:var(--azul);font-weight:600">＋ Crear cliente «' + esc(q) + '»</div>';
+  panel.innerHTML = html; panel.classList.remove('oculto');
+}
+function fCliTecla(e){
+  var panel = $('fCliPanel'); if(panel.classList.contains('oculto')) return;
+  var ops = panel.querySelectorAll('.ac-op');
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault(); _acSel = Math.max(0, Math.min(ops.length - 1, _acSel + (e.key === 'ArrowDown' ? 1 : -1)));
+    ops.forEach(function(o, i){ o.classList.toggle('sel', i === _acSel); });
+  } else if(e.key === 'Enter'){
+    e.preventDefault();
+    if(_acLista[_acSel]) fElegirCliente(_acLista[_acSel].id); else nuevoClienteDesdeForm();
+  } else if(e.key === 'Escape'){ cerrarAc(); }
+}
+function cerrarAc(){ var p = $('fCliPanel'); if(p) p.classList.add('oculto'); }
+function fElegirCliente(id){
+  F.clienteId = id; F.clienteTexto = S.clientes[id].nombre; F.abonoId = '';
+  // Si tiene un único abono usable acá, lo sugerimos directamente
+  var usables = abonosDeCliente(id).filter(function(a){ var e = estadoAbono(a).cod; return (e === 'activo' || e === 'porvencer') && abonoUsableAca(a); });
+  if(usables.length === 1) fUsarAbono(usables[0].id, true); else pintarFormulario();
+}
+function nuevoClienteDesdeForm(){
+  var nombre = ($('fCli').value || '').trim().toUpperCase();
+  editarCliente('', nombre, function(id){ fElegirCliente(id); });
+}
+function fUsarAbono(id, silencioso){
+  if(F.abonoId === id && !silencioso){ F.abonoId = ''; F.servicioId = ''; pintarFormulario(); return; }
+  var a = S.abonos[id];
+  F.abonoId = id;
+  F.servicioId = S.servicios['ses-' + a.equipoId] ? 'ses-' + a.equipoId : '';
+  F.importe = 0;
+  pintarFormulario();
+}
+function fServCambio(id){
+  F.servicioId = id;
+  var s = S.servicios[id];
+  F.importe = s ? precioDe(s, F.forma) : '';
+  if(s && s.tipo === 'abono'){ F.vence = s.dias ? sumarDias(S.fecha, Number(s.dias)) : ''; F.usaPrimera = true; F.multiLocal = !!cfg().abonoMultiLocalDefault; }
+  pintarFormulario();
+}
+function fForma(f){ F.forma = f; var s = S.servicios[F.servicioId]; if(s) F.importe = precioDe(s, f); pintarFormulario(); }
+
+function guardarMov(){
+  var serv = S.servicios[F.servicioId];
+  if(!serv){ toast('Elegí un servicio', 'err'); return; }
+  if(F.clienteTexto.trim() && !F.clienteId){ toast('Elegí el cliente de la lista o crealo con «＋ Crear cliente»', 'err'); return; }
+  if((serv.tipo === 'abono' || F.abonoId) && !F.clienteId){ toast('Para un abono hay que elegir el cliente', 'err'); return; }
+  var ab = F.abonoId ? S.abonos[F.abonoId] : null;
+  if(ab){
+    var e = estadoAbono(ab);
+    if(e.saldo <= 0){ toast('Ese abono no tiene sesiones disponibles', 'err'); return; }
+    if(e.cod === 'vencido' && !confirm('El abono venció el ' + fmtF(ab.vence) + '. ¿Usarlo igual?')) return;
+  }
+  var importe = ab ? 0 : num(F.importe);
+  if(!ab && importe <= 0 && !confirm('El importe es $0. ¿Guardar igual?')) return;
+
+  var id = DB.key(), cli = S.clientes[F.clienteId];
+  var mov = {
+    fecha:S.fecha, hora:horaAhora(), clienteId:F.clienteId || '', clienteNombre:cli ? cli.nombre : '',
+    servicioId:serv.id, servicioNombre:serv.nombre, tipo:serv.tipo, equipoId:serv.equipoId || '',
+    sesion: serv.tipo === 'sesion' || (serv.tipo === 'abono' && !!F.usaPrimera),
+    forma: ab ? 'abono' : F.forma, importe:importe, nota:(F.nota || '').trim(),
+    usuario:S.email, creado:new Date().toISOString()
+  };
+  var u = {};
+  if(ab){ mov.abonoId = ab.id; mov.abonoNombre = ab.nombre; mov.equipoId = ab.equipoId; mov.sesion = true; }
+  if(serv.tipo === 'abono'){
+    var abId = DB.key();
+    mov.abonoCreadoId = abId;
+    u['abonos/' + abId] = { clienteId:F.clienteId, clienteNombre:cli.nombre, servicioId:serv.id, nombre:serv.nombre, equipoId:serv.equipoId,
+      sesiones:Number(serv.sesiones) || 0, usadas:F.usaPrimera ? 1 : 0, fechaVenta:S.fecha, vence:F.vence || '',
+      sucursalId:S.suc, multiLocal:!!F.multiLocal, precio:importe, forma:F.forma, movId:id, creado:mov.creado };
+  }
+  if(!mov.equipoId) mov.sesion = false;
+  u['movimientos/' + S.suc + '/' + S.fecha + '/' + id] = mov;
+  if(F.clienteId){
+    u['historial/' + F.clienteId + '/' + id] = { fecha:S.fecha, suc:S.suc, servicio:mov.abonoNombre ? 'Sesión con ' + mov.abonoNombre : serv.nombre, forma:mov.forma, importe:importe };
+    if(!cli.ultimaVisita || cli.ultimaVisita < S.fecha) u['clientes/' + F.clienteId + '/ultimaVisita'] = S.fecha;
+  }
+  $('btnGuardarMov').disabled = true;
+  DB.update(u).then(function(){ return ab ? DB.incr('abonos/' + ab.id + '/usadas', 1) : null; })
+  .then(function(){
+    Object.keys(u).forEach(function(k){ var p = k.split('/'); if(p[0] === 'abonos' && p.length === 2) S.abonos[p[1]] = Object.assign({ id:p[1] }, u[k]); if(p[0] === 'clientes' && S.clientes[p[1]]) S.clientes[p[1]].ultimaVisita = S.fecha; });
+    if(ab) S.abonos[ab.id].usadas = (S.abonos[ab.id].usadas || 0) + 1;
+    toast(ab ? 'Sesión descontada del abono ✔' : 'Guardado ✔', 'ok');
+    F = formVacio();
+    return recalcularDia();
+  }).then(pintarDia).catch(function(err){ errorCarga(err); var b = $('btnGuardarMov'); if(b) b.disabled = false; });
+}
+
+/* ---------- Lista de movimientos ---------- */
+function pintarMovs(){
+  var movs = ordenarPor(valores(D.movs), function(m){ return m.hora + m.creado; });
+  var t = totalesMovs(movs);
+  $('diaTotalesMini').innerHTML = '<span class="badge b-azul">' + t.sesiones + ' sesiones</span><span class="badge b-sol">' + $$(t.total) + '</span>';
+  if(!movs.length){ $('diaMovs').innerHTML = '<div class="vacio">Todavía no hay nada anotado este día.</div>'; return; }
+  var etForma = { efectivo:'<span class="badge b-ok">Efectivo</span>', tarjeta:'<span class="badge b-azul">Tarjeta</span>', transferencia:'<span class="badge b-azul">Transf.</span>', abono:'<span class="badge b-sol">Abono</span>' };
+  $('diaMovs').innerHTML = '<div class="tabla-wrap"><table><thead><tr><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Equipo</th><th>Pago</th><th class="num">Importe</th><th></th></tr></thead><tbody>' +
+    movs.map(function(m){
+      var eq = S.equipos[m.equipoId];
+      return '<tr><td>' + esc(m.hora) + '</td>' +
+        '<td>' + (m.clienteId ? '<a href="#" onclick="verCliente(\'' + m.clienteId + '\');return false">' + esc(m.clienteNombre) + '</a>' : '<span class="nota">—</span>') + '</td>' +
+        '<td>' + esc(m.abonoNombre ? 'Sesión (' + m.abonoNombre + ')' : m.servicioNombre) + (m.nota ? '<br><span class="nota">' + esc(m.nota) + '</span>' : '') + '</td>' +
+        '<td>' + (m.sesion && eq ? '<span class="ficha ' + eq.ficha + '"></span>' + esc(eq.nombre) : '<span class="nota">—</span>') + '</td>' +
+        '<td>' + (etForma[m.forma] || esc(m.forma)) + '</td>' +
+        '<td class="num">' + (m.forma === 'abono' ? '<span class="nota">—</span>' : $$(m.importe)) + '</td>' +
+        '<td>' + (esAdmin() ? '<button class="btn-icono" title="Borrar" onclick="borrarMov(\'' + m.id + '\')">🗑️</button>' : '') + '</td></tr>';
+    }).join('') + '</tbody><tfoot><tr><td colspan="5">Efectivo ' + $$(t.efectivo) + ' · Tarjeta ' + $$(t.tarjeta) + ' · Transf. ' + $$(t.transferencia) + '</td><td class="num">' + $$(t.total) + '</td><td></td></tr></tfoot></table></div>';
+}
+function borrarMov(id){
+  var m = D.movs[id]; if(!m) return;
+  var aviso = '¿Borrar «' + (m.abonoNombre ? 'Sesión con ' + m.abonoNombre : m.servicioNombre) + '» de ' + (m.clienteNombre || 'sin cliente') + '?';
+  var u = {};
+  u['movimientos/' + S.suc + '/' + S.fecha + '/' + id] = null;
+  if(m.clienteId) u['historial/' + m.clienteId + '/' + id] = null;
+  if(m.abonoCreadoId){
+    var ab = S.abonos[m.abonoCreadoId];
+    var extra = ab ? (ab.usadas || 0) - (m.sesion ? 1 : 0) : 0;
+    aviso += '\n\nEsto también borra el abono vendido' + (extra > 0 ? ' (¡ya tiene ' + extra + ' sesión/es usadas en otros días!)' : '') + '.';
+    u['abonos/' + m.abonoCreadoId] = null;
+  }
+  if(m.abonoId) aviso += '\n\nLa sesión vuelve al abono.';
+  if(!confirm(aviso)) return;
+  DB.update(u).then(function(){
+    if(m.abonoId && S.abonos[m.abonoId]) return DB.incr('abonos/' + m.abonoId + '/usadas', -1).then(function(){ S.abonos[m.abonoId].usadas = Math.max(0, (S.abonos[m.abonoId].usadas || 0) - 1); });
+  }).then(function(){
+    if(m.abonoCreadoId) delete S.abonos[m.abonoCreadoId];
+    toast('Borrado', 'ok');
+    return recalcularDia();
+  }).then(pintarDia).catch(errorCarga);
+}
+
+/* ---------- Caja del día ---------- */
+function cajaInicial(){
+  if(D.caja.inicial != null && D.caja.inicial !== '') return Number(D.caja.inicial);
+  return D.prev && D.prev.caja.resumen ? Number(D.prev.caja.resumen.cierre) || 0 : 0;
+}
+function sumaItems(o){ return valores(o).reduce(function(a, x){ return a + (Number(x.importe) || 0); }, 0); }
+function calcularCaja(){
+  var t = totalesMovs(valores(D.movs));
+  var ini = cajaInicial(), gastos = sumaItems(D.caja.gastos), retiros = sumaItems(D.caja.retiros);
+  return { t:t, inicial:ini, gastos:gastos, retiros:retiros, cierre: ini + t.efectivo - gastos - retiros };
+}
+function pintarCaja(){
+  var c = calcularCaja(), ed = puedeCargar();
+  var sugerido = D.prev && D.prev.caja.resumen ? 'Cierre del ' + fmtFCorta(D.prev.fecha) + ': ' + $$(D.prev.caja.resumen.cierre) : '';
+  function lista(tipo, et1){
+    var items = valores(D.caja[tipo]);
+    return (items.length ? items.map(function(x){
+      return '<div class="item-lista"><span>' + esc(x.desc) + '</span><span>' + $$(x.importe) + (esAdmin() ? ' <button class="btn-icono" onclick="borrarItemCaja(\'' + tipo + '\',\'' + x.id + '\')">✕</button>' : '') + '</span></div>';
+    }).join('') : '<div class="nota" style="padding:4px 0">Sin ' + tipo + '.</div>') +
+    (ed ? '<div style="display:flex;gap:6px;margin-top:6px"><input id="nuevo-' + tipo + '-desc" placeholder="' + et1 + '"><input id="nuevo-' + tipo + '-imp" class="mini-input" inputmode="numeric" placeholder="$"><button class="btn btn-sec btn-chico" onclick="agregarItemCaja(\'' + tipo + '\')">＋</button></div>' : '');
+  }
+  $('diaCaja').innerHTML = '<h3>💵 Caja del día</h3>' +
+    '<div class="linea"><span>Caja inicial' + (sugerido ? '<br><span class="nota">' + esc(sugerido) + '</span>' : '') + '</span>' +
+      (ed ? '<input class="mini-input" inputmode="numeric" value="' + c.inicial + '" onchange="guardarCajaCampo(\'inicial\', num(this.value))">' : '<b>' + $$(c.inicial) + '</b>') + '</div>' +
+    '<div class="linea"><span>＋ Cobrado en efectivo</span><b>' + $$(c.t.efectivo) + '</b></div>' +
+    '<div class="linea"><span>－ Gastos</span><b>' + $$(c.gastos) + '</b></div>' +
+    '<div class="linea"><span>－ Retiros</span><b>' + $$(c.retiros) + '</b></div>' +
+    '<div class="linea total"><span>Cierre de caja (efectivo)</span><span>' + $$(c.cierre) + '</span></div>' +
+    '<div class="linea"><span class="nota">Tarjeta + transferencias (no entran en la caja)</span><span class="nota">' + $$(c.t.tarjeta + c.t.transferencia) + '</span></div>' +
+    '<div style="margin-top:14px"><b style="font-size:14px">Gastos</b>' + lista('gastos', 'Descripción (ej. yeso, librería)') + '</div>' +
+    '<div style="margin-top:14px"><b style="font-size:14px">Retiros</b>' + lista('retiros', '¿Quién retira?') + '</div>' +
+    '<div class="campo" style="margin-top:14px"><label>Observaciones</label><textarea rows="2" ' + (ed ? '' : 'disabled ') + 'onchange="guardarCajaCampo(\'observaciones\', this.value)">' + esc(D.caja.observaciones || '') + '</textarea></div>';
+}
+function rutaCaja(){ return 'cajas/' + S.suc + '/' + S.fecha; }
+function guardarCajaCampo(campo, valor){
+  var u = {}; u[rutaCaja() + '/' + campo] = valor;
+  DB.update(u).then(function(){ D.caja[campo] = valor; return recalcularDia(); }).then(function(){ pintarCaja(); pintarFichas(); }).catch(errorCarga);
+}
+function agregarItemCaja(tipo){
+  var d = $('nuevo-' + tipo + '-desc').value.trim(), imp = num($('nuevo-' + tipo + '-imp').value);
+  if(!d || imp <= 0){ toast('Completá descripción e importe', 'err'); return; }
+  var id = DB.key(), u = {};
+  u[rutaCaja() + '/' + tipo + '/' + id] = { desc:d, importe:imp, usuario:S.email };
+  DB.update(u).then(function(){ D.caja[tipo] = D.caja[tipo] || {}; D.caja[tipo][id] = { id:id, desc:d, importe:imp }; return recalcularDia(); })
+    .then(function(){ pintarCaja(); }).catch(errorCarga);
+}
+function borrarItemCaja(tipo, id){
+  if(!confirm('¿Borrar este ' + (tipo === 'gastos' ? 'gasto' : 'retiro') + '?')) return;
+  var u = {}; u[rutaCaja() + '/' + tipo + '/' + id] = null;
+  DB.update(u).then(function(){ delete D.caja[tipo][id]; return recalcularDia(); }).then(function(){ pintarCaja(); }).catch(errorCarga);
+}
+
+/* ---------- Fichas ---------- */
+function fichasDelDia(){
+  var t = totalesMovs(valores(D.movs)), fx = D.caja.fichas || {}, prevF = D.prev && D.prev.caja.resumen && D.prev.caja.resumen.fichasCierre || {};
+  var r = {};
+  ['gris','dorada'].forEach(function(col){
+    var f = fx[col] || {};
+    var inicio = f.inicio != null && f.inicio !== '' ? Number(f.inicio) : (Number(prevF[col]) || 0);
+    var rep = Number(f.repuestas) || 0;
+    r[col] = { inicio:inicio, repuestas:rep, usadas:t.fichas[col], cierre:inicio + rep - t.fichas[col] };
+  });
+  r.porEquipo = t.porEquipo;
+  return r;
+}
+function pintarFichas(){
+  var f = fichasDelDia(), ed = puedeCargar(), ctrl = D.caja.control || {};
+  function inp(col, campo, v){ return ed ? '<input class="mini-input" style="width:64px" inputmode="numeric" value="' + v + '" onchange="guardarCajaCampo(\'fichas/' + col + '/' + campo + '\', num(this.value))">' : v; }
+  var html = '<h3>🪙 Fichas</h3><div class="tabla-wrap"><table><thead><tr><th></th><th class="num">Inicio</th><th class="num">＋Repuestas</th><th class="num">－Usadas</th><th class="num">Cierre</th></tr></thead><tbody>' +
+    ['gris','dorada'].map(function(col){ var x = f[col];
+      return '<tr><td style="white-space:nowrap"><span class="ficha ' + col + '"></span>' + (col === 'gris' ? 'Grises' : 'Doradas') + '</td><td class="num">' + inp(col, 'inicio', x.inicio) + '</td><td class="num">' + inp(col, 'repuestas', x.repuestas) + '</td><td class="num">' + x.usadas + '</td><td class="num"><b>' + x.cierre + '</b></td></tr>';
+    }).join('') + '</tbody></table></div>' +
+    '<div class="nota" style="margin:8px 0 14px">«Usadas» se calcula solo con las sesiones anotadas. El inicio se toma del cierre del día anterior (se puede corregir).</div>' +
+    '<b style="font-size:14px">Control de supervisión</b><div class="tabla-wrap"><table><thead><tr><th>Equipo</th><th class="num">Según planilla</th><th class="num">Sacadas</th><th class="num">Diferencia</th></tr></thead><tbody>';
+  listaEquipos(true).forEach(function(e){
+    var us = f.porEquipo[e.id] || 0, c = ctrl[e.id] || {}, tiene = c.sacadas != null && c.sacadas !== '';
+    var dif = tiene ? Number(c.sacadas) - us : null;
+    html += '<tr class="' + (dif ? 'fila-rojo' : '') + '"><td style="white-space:nowrap"><span class="ficha ' + e.ficha + '"></span>' + esc(e.nombre) + '</td><td class="num">' + us + '</td>' +
+      '<td class="num">' + (ed ? '<input class="mini-input" style="width:64px" inputmode="numeric" value="' + (tiene ? c.sacadas : '') + '" onchange="guardarCajaCampo(\'control/' + e.id + '/sacadas\', this.value === \'\' ? null : num(this.value))">' : (tiene ? c.sacadas : '—')) + '</td>' +
+      '<td class="num">' + (dif === null ? '<span class="nota">—</span>' : dif === 0 ? '<span class="badge b-ok">OK</span>' : '<b style="color:var(--err)">' + (dif > 0 ? '+' : '') + dif + '</b>') + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  $('diaFichas').innerHTML = html;
+}
+
+/* ---------- Resumen del día (se guarda para el día siguiente y el mes) ---------- */
+function recalcularDia(){
+  return cargarDia().then(function(){
+    var c = calcularCaja(), f = fichasDelDia(), u = {};
+    u[rutaCaja() + '/resumen'] = { efectivo:c.t.efectivo, tarjeta:c.t.tarjeta, transferencia:c.t.transferencia, total:c.t.total,
+      gastos:c.gastos, retiros:c.retiros, inicial:c.inicial, cierre:c.cierre, sesiones:c.t.sesiones,
+      fichasCierre:{ gris:f.gris.cierre, dorada:f.dorada.cierre }, actualizado:new Date().toISOString() };
+    return DB.update(u).then(function(){ D.caja.resumen = u[rutaCaja() + '/resumen']; });
+  });
+}
+
+/* =========================================================
+   11. CLIENTES
+   ========================================================= */
+var _cliBusq = '';
+function renderClientes(){
+  var cont = $('tab-clientes');
+  cont.innerHTML = '<div class="card"><h3><span>👥 Clientes <span class="nota" id="cliCuenta"></span></span><span class="acciones">' +
+    (puedeCargar() ? '<button class="btn btn-pri btn-chico" onclick="editarCliente(\'\')">＋ Nuevo cliente</button>' : '') + '</span></h3>' +
+    '<div class="buscador" style="margin-bottom:12px"><input id="cliBusq" placeholder="Buscar por nombre, apellido o teléfono…" value="' + esc(_cliBusq) + '" oninput="_cliBusq=this.value;pintarListaClientes()"></div>' +
+    '<div id="cliLista"></div></div>';
+  pintarListaClientes();
+}
+function pintarListaClientes(){
+  var q = _cliBusq.trim(), qd = q.replace(/\D/g, '');
+  var l = valores(S.clientes).filter(function(c){ return !q || coincide(q, c.nombre) || (qd.length >= 3 && String(c.telefono || '').replace(/\D/g, '').indexOf(qd) >= 0); });
+  l = ordenarPor(l, function(c){ return norm(c.nombre); });
+  $('cliCuenta').textContent = '(' + l.length + ')';
+  if(!l.length){ $('cliLista').innerHTML = '<div class="vacio">' + (Object.keys(S.clientes).length ? 'No hay coincidencias.' : 'Todavía no hay clientes. ' + (esAdmin() ? 'Podés importar los de la planilla desde Configuración.' : '')) + '</div>'; return; }
+  $('cliLista').innerHTML = '<div class="tabla-wrap"><table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Abono</th><th>Última visita</th><th></th></tr></thead><tbody>' +
+    l.slice(0, 300).map(function(c){
+      var abs = abonosDeCliente(c.id).map(function(a){ return { a:a, e:estadoAbono(a) }; }).filter(function(x){ return x.e.cod === 'activo' || x.e.cod === 'porvencer'; });
+      return '<tr><td><a href="#" onclick="verCliente(\'' + c.id + '\');return false"><b>' + esc(c.nombre) + '</b></a>' + (c.notas ? '<br><span class="nota">' + esc(c.notas) + '</span>' : '') + '</td>' +
+        '<td>' + esc(c.telefono || '') + ' ' + botonWhatsapp(c.telefono) + '</td>' +
+        '<td>' + (abs.length ? abs.map(function(x){ return '<span class="badge ' + x.e.cls + '">' + esc(x.a.nombre.replace('Abono ', '')) + ': ' + x.e.saldo + '</span>'; }).join(' ') : '<span class="nota">—</span>') + '</td>' +
+        '<td>' + fmtF(c.ultimaVisita) + '</td>' +
+        '<td><button class="btn btn-sec btn-chico" onclick="verCliente(\'' + c.id + '\')">Ver</button></td></tr>';
+    }).join('') + '</tbody></table></div>' + (l.length > 300 ? '<div class="nota" style="padding:8px">Mostrando 300 de ' + l.length + '. Afiná la búsqueda.</div>' : '');
+}
+function editarCliente(id, nombreSugerido, alGuardar){
+  var c = id ? S.clientes[id] : { nombre:nombreSugerido || '' };
+  abrirModal(id ? 'Editar cliente' : 'Nuevo cliente',
+    '<div class="form-fila">' +
+    '<div class="c12 campo"><label>Apellido y nombre *</label><input id="ecNombre" value="' + esc(c.nombre) + '"></div>' +
+    '<div class="c6 campo"><label>Teléfono / WhatsApp</label><input id="ecTel" inputmode="tel" value="' + esc(c.telefono || '') + '"></div>' +
+    '<div class="c6 campo"><label>DNI</label><input id="ecDni" inputmode="numeric" value="' + esc(c.dni || '') + '"></div>' +
+    '<div class="c6 campo"><label>Email</label><input id="ecEmail" type="email" value="' + esc(c.email || '') + '"></div>' +
+    '<div class="c6 campo"><label>Fecha de nacimiento</label><input id="ecNac" type="date" value="' + esc(c.nacimiento || '') + '"></div>' +
+    '<div class="c12 campo"><label>Notas (tipo de piel, recomendaciones…)</label><textarea id="ecNotas" rows="2">' + esc(c.notas || '') + '</textarea></div></div>',
+    '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" id="ecGuardar">Guardar</button>');
+  $('ecGuardar').onclick = function(){
+    var nombre = $('ecNombre').value.trim().toUpperCase().replace(/\s+/g, ' ');
+    if(!nombre){ toast('Falta el nombre', 'err'); return; }
+    var dup = valores(S.clientes).filter(function(x){ return x.id !== id && norm(x.nombre) === norm(nombre); })[0];
+    if(dup && !confirm('Ya existe un cliente «' + dup.nombre + '». ¿Crear otro igual?')) return;
+    var nid = id || DB.key();
+    var datos = Object.assign({}, id ? S.clientes[id] : { sucursalAlta:S.suc, creado:new Date().toISOString() }, {
+      nombre:nombre, telefono:$('ecTel').value.trim(), dni:$('ecDni').value.trim(), email:$('ecEmail').value.trim(),
+      nacimiento:$('ecNac').value, notas:$('ecNotas').value.trim() });
+    delete datos.id;
+    var u = {}; u['clientes/' + nid] = datos;
+    DB.update(u).then(function(){
+      S.clientes[nid] = Object.assign({ id:nid }, datos);
+      cerrarModal(); toast('Cliente guardado ✔', 'ok');
+      if(alGuardar) alGuardar(nid); else if(S.tab === 'clientes') pintarListaClientes();
+    }).catch(errorCarga);
+  };
+  setTimeout(function(){ $('ecNombre').focus(); }, 50);
+}
+function verCliente(id){
+  var c = S.clientes[id]; if(!c) return;
+  var abs = ordenarPor(abonosDeCliente(id), function(a){ return a.fechaVenta; }).reverse();
+  abrirModal(c.nombre,
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px" class="nota">' +
+      (c.telefono ? '<span>📞 ' + esc(c.telefono) + ' ' + botonWhatsapp(c.telefono) + '</span>' : '') +
+      (c.dni ? '<span>🪪 ' + esc(c.dni) + '</span>' : '') + (c.email ? '<span>✉️ ' + esc(c.email) + '</span>' : '') +
+      (c.nacimiento ? '<span>🎂 ' + fmtF(c.nacimiento) + '</span>' : '') + '<span>Última visita: ' + fmtF(c.ultimaVisita) + '</span></div>' +
+    (c.notas ? '<div class="aviso info" style="margin-top:0">📝 ' + esc(c.notas) + '</div>' : '') +
+    '<h4 style="margin:16px 0 8px">🎟️ Abonos</h4>' +
+    (abs.length ? '<div class="tabla-wrap"><table><tbody>' + abs.map(function(a){ var e = estadoAbono(a);
+      return '<tr><td><b>' + esc(a.nombre) + '</b><br><span class="nota">Comprado ' + fmtF(a.fechaVenta) + ' en ' + esc(nombreSuc(a.sucursalId)) + (a.multiLocal ? ' · vale en todos los locales' : '') + '</span></td>' +
+        '<td style="min-width:110px"><div class="barra"><i style="width:' + ((a.usadas || 0) / (a.sesiones || 1) * 100) + '%"></i></div><span class="nota">' + (a.usadas || 0) + ' de ' + a.sesiones + ' usadas</span></td>' +
+        '<td><span class="badge ' + e.cls + '">' + esc(e.txt) + '</span></td></tr>';
+    }).join('') + '</tbody></table></div>' : '<div class="nota">No tiene abonos.</div>') +
+    '<h4 style="margin:16px 0 8px">🕘 Historial</h4><div id="vcHist" class="nota">Cargando…</div>',
+    (esAdmin() ? '<button class="btn btn-err" onclick="borrarCliente(\'' + id + '\')">Borrar</button>' : '') +
+    (puedeCargar() ? '<button class="btn btn-sec" onclick="editarCliente(\'' + id + '\')">✏️ Editar</button>' : '') +
+    '<button class="btn btn-pri" onclick="cerrarModal()">Cerrar</button>');
+  DB.get('historial/' + id).then(function(h){
+    var l = ordenarPor(valores(h || {}), function(x){ return x.fecha; }).reverse();
+    $('vcHist').innerHTML = l.length ? '<div class="tabla-wrap"><table><tbody>' + l.slice(0, 60).map(function(x){
+      return '<tr><td>' + fmtF(x.fecha) + '</td><td>' + esc(x.servicio) + '</td><td>' + esc(nombreSuc(x.suc)) + '</td><td class="num">' + (x.forma === 'abono' ? 'abono' : $$(x.importe)) + '</td></tr>';
+    }).join('') + '</tbody></table></div>' : 'Sin visitas registradas en el sistema.';
+  }).catch(function(){ $('vcHist').textContent = 'No se pudo cargar el historial.'; });
+}
+function borrarCliente(id){
+  var c = S.clientes[id];
+  if(abonosDeCliente(id).length){ toast('Tiene abonos: no se puede borrar', 'err'); return; }
+  if(!confirm('¿Borrar a ' + c.nombre + '? Su historial queda en las planillas de cada día.')) return;
+  var u = {}; u['clientes/' + id] = null; u['historial/' + id] = null;
+  DB.update(u).then(function(){ delete S.clientes[id]; cerrarModal(); toast('Cliente borrado', 'ok'); if(S.tab === 'clientes') pintarListaClientes(); }).catch(errorCarga);
+}
+
+/* =========================================================
+   12. ABONOS
+   ========================================================= */
+var _abFiltro = 'vigentes', _abBusq = '', _abSuc = '';
+function renderAbonos(){
+  var sucs = listaSucursales();
+  $('tab-abonos').innerHTML = '<div class="card"><h3>🎟️ Abonos</h3>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center">' +
+      '<div class="seg">' + [['vigentes','Vigentes'],['porvencer','Por vencer'],['vencido','Vencidos'],['agotado','Agotados'],['todos','Todos']].map(function(x){
+        return '<button class="' + (_abFiltro === x[0] ? 'on' : '') + '" onclick="_abFiltro=\'' + x[0] + '\';renderAbonos()">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<select style="width:auto" onchange="_abSuc=this.value;pintarListaAbonos()"><option value="">Todas las sucursales</option>' + sucs.map(function(s){ return '<option value="' + esc(s.id) + '"' + (_abSuc === s.id ? ' selected' : '') + '>' + esc(s.nombre) + '</option>'; }).join('') + '</select>' +
+      '<div class="buscador" style="flex:1;min-width:200px"><input placeholder="Buscar cliente…" value="' + esc(_abBusq) + '" oninput="_abBusq=this.value;pintarListaAbonos()"></div>' +
+    '</div><div id="abLista"></div></div>';
+  pintarListaAbonos();
+}
+function pintarListaAbonos(){
+  var l = valores(S.abonos).map(function(a){ return { a:a, e:estadoAbono(a), c:S.clientes[a.clienteId] || { nombre:a.clienteNombre } }; }).filter(function(x){
+    if(_abFiltro === 'vigentes' && !(x.e.cod === 'activo' || x.e.cod === 'porvencer')) return false;
+    if(_abFiltro !== 'vigentes' && _abFiltro !== 'todos' && x.e.cod !== _abFiltro) return false;
+    if(_abSuc && x.a.sucursalId !== _abSuc) return false;
+    if(_abBusq.trim() && !coincide(_abBusq, x.c.nombre)) return false;
+    return true;
+  });
+  l = ordenarPor(l, function(x){ return (x.a.vence || '9999') + norm(x.c.nombre); });
+  if(!l.length){ $('abLista').innerHTML = '<div class="vacio">No hay abonos en este filtro.</div>'; return; }
+  $('abLista').innerHTML = '<div class="tabla-wrap"><table><thead><tr><th>Cliente</th><th>Abono</th><th>Sesiones</th><th>Vence</th><th>Local</th><th>Estado</th><th></th></tr></thead><tbody>' +
+    l.map(function(x){ var a = x.a;
+      return '<tr><td><a href="#" onclick="verCliente(\'' + a.clienteId + '\');return false"><b>' + esc(x.c.nombre) + '</b></a></td>' +
+        '<td>' + esc(a.nombre) + '<br><span class="nota">' + fmtF(a.fechaVenta) + (a.precio ? ' · ' + $$(a.precio) : '') + '</span></td>' +
+        '<td style="min-width:120px"><div class="barra"><i style="width:' + ((a.usadas || 0) / (a.sesiones || 1) * 100) + '%"></i></div><span class="nota">quedan <b>' + x.e.saldo + '</b> de ' + a.sesiones + '</span></td>' +
+        '<td>' + (a.vence ? fmtF(a.vence) : '<span class="nota">sin venc.</span>') + '</td>' +
+        '<td>' + esc(nombreSuc(a.sucursalId)) + (a.multiLocal ? '<br><span class="badge b-azul">todos los locales</span>' : '') + '</td>' +
+        '<td><span class="badge ' + x.e.cls + '">' + esc(x.e.txt) + '</span></td>' +
+        '<td>' + (esAdmin() ? '<button class="btn btn-sec btn-chico" onclick="editarAbono(\'' + a.id + '\')">✏️</button>' : '') + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
+function editarAbono(id){
+  var a = S.abonos[id];
+  abrirModal('Editar abono — ' + (S.clientes[a.clienteId] ? S.clientes[a.clienteId].nombre : a.clienteNombre),
+    '<div class="form-fila">' +
+    '<div class="c4 campo"><label>Sesiones totales</label><input id="eaSes" inputmode="numeric" value="' + a.sesiones + '"></div>' +
+    '<div class="c4 campo"><label>Usadas</label><input id="eaUs" inputmode="numeric" value="' + (a.usadas || 0) + '"></div>' +
+    '<div class="c4 campo"><label>Vence</label><input id="eaVence" type="date" value="' + esc(a.vence || '') + '"></div>' +
+    '<div class="c12"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="eaMulti" ' + (a.multiLocal ? 'checked' : '') + '> Se puede usar en otros locales</label></div>' +
+    '<div class="c12 campo"><label>Motivo del cambio</label><input id="eaMotivo" placeholder="Ej. se le extendió por vacaciones"></div></div>' +
+    '<div class="nota">Para corregir sesiones mal anotadas, mejor borrá el movimiento en la planilla de ese día: el abono se ajusta solo.</div>',
+    '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" onclick="guardarAbonoEditado(\'' + id + '\')">Guardar</button>');
+}
+function guardarAbonoEditado(id){
+  var a = S.abonos[id], u = {};
+  var cambios = { sesiones:num($('eaSes').value), usadas:num($('eaUs').value), vence:$('eaVence').value, multiLocal:$('eaMulti').checked };
+  Object.keys(cambios).forEach(function(k){ u['abonos/' + id + '/' + k] = cambios[k]; });
+  u['abonos/' + id + '/ajustes/' + DB.key()] = { fecha:new Date().toISOString(), usuario:S.email, motivo:$('eaMotivo').value.trim(), antes:{ sesiones:a.sesiones, usadas:a.usadas || 0, vence:a.vence || '', multiLocal:!!a.multiLocal } };
+  DB.update(u).then(function(){ Object.assign(a, cambios); cerrarModal(); toast('Abono actualizado ✔', 'ok'); pintarListaAbonos(); }).catch(errorCarga);
+}
+
+/* =========================================================
+   13. RESUMEN DEL MES (equivalente a la hoja BASE)
+   ========================================================= */
+var _rsMes = hoy().slice(0, 7), _rsSuc = '';
+function renderResumen(){
+  if(!_rsSuc) _rsSuc = S.suc;
+  var sucs = listaSucursales();
+  var cont = $('tab-resumen');
+  cont.innerHTML = '<div class="card"><div class="dia-nav">' +
+    '<input type="month" value="' + _rsMes + '" onchange="_rsMes=this.value;renderResumen()">' +
+    '<select style="width:auto" onchange="_rsSuc=this.value;renderResumen()">' + (sucs.length > 1 ? '<option value="*"' + (_rsSuc === '*' ? ' selected' : '') + '>Todas las sucursales</option>' : '') +
+      sucs.map(function(s){ return '<option value="' + esc(s.id) + '"' + (_rsSuc === s.id ? ' selected' : '') + '>' + esc(s.nombre) + '</option>'; }).join('') + '</select>' +
+    '<button class="btn btn-sec btn-chico" style="margin-left:auto" onclick="exportarResumen()">⬇️ Descargar Excel (CSV)</button>' +
+    '</div></div><div id="rsCuerpo"><div class="vacio">Cargando…</div></div>';
+  var ids = _rsSuc === '*' ? sucs.map(function(s){ return s.id; }) : [_rsSuc];
+  var a = _rsMes + '-01', b = _rsMes + '-31';
+  Promise.all(ids.map(function(id){ return Promise.all([DB.range('movimientos/' + id, a, b), DB.range('cajas/' + id, a, b)]); }))
+  .then(function(rs){
+    var dias = {}, todos = [];
+    rs.forEach(function(r){
+      Object.keys(r[0]).forEach(function(d){ var l = valores(r[0][d]); dias[d] = dias[d] || { movs:[], gastos:0, retiros:0 }; dias[d].movs = dias[d].movs.concat(l); todos = todos.concat(l); });
+      Object.keys(r[1]).forEach(function(d){ dias[d] = dias[d] || { movs:[], gastos:0, retiros:0 }; dias[d].gastos += sumaItems(r[1][d].gastos); dias[d].retiros += sumaItems(r[1][d].retiros); });
+    });
+    pintarResumen(dias, todos);
+  }).catch(errorCarga);
+}
+var _rsFilas = [];
+function pintarResumen(dias, todos){
+  var tot = totalesMovs(todos), acum = 0, gT = 0, rT = 0;
+  _rsFilas = Object.keys(dias).sort().map(function(d){
+    var t = totalesMovs(dias[d].movs); acum += t.total; gT += dias[d].gastos; rT += dias[d].retiros;
+    return { fecha:d, sesiones:t.sesiones, efectivo:t.efectivo, tarjeta:t.tarjeta, transferencia:t.transferencia, gastos:dias[d].gastos, retiros:dias[d].retiros, total:t.total, acumulado:acum };
+  });
+  var porServ = {};
+  todos.forEach(function(m){ if(m.forma === 'abono') return; var k = m.servicioNombre; porServ[k] = porServ[k] || { n:0, imp:0 }; porServ[k].n++; porServ[k].imp += Number(m.importe) || 0; });
+  var servs = ordenarPor(Object.keys(porServ), function(k){ return -porServ[k].imp; });
+  var maxEq = Math.max.apply(null, [1].concat(listaEquipos().map(function(e){ return tot.porEquipo[e.id] || 0; })));
+  $('rsCuerpo').innerHTML =
+    '<div class="grid g4" style="margin-bottom:18px">' +
+      kpi('Total cobrado', $$(tot.total), 'Efvo ' + $$(tot.efectivo) + ' · Tarj ' + $$(tot.tarjeta) + ' · Transf ' + $$(tot.transferencia), 'sol') +
+      kpi('Sesiones', tot.sesiones, tot.conAbono + ' con abono · ' + (tot.sesiones - tot.conAbono) + ' pagas') +
+      kpi('Abonos vendidos', tot.abonosVendidos, 'en el mes', 'sol') +
+      kpi('Gastos + retiros', $$(gT + rT), 'Gastos ' + $$(gT) + ' · Retiros ' + $$(rT)) +
+    '</div>' +
+    '<div class="card"><h3>Día por día</h3>' + (_rsFilas.length ? '<div class="tabla-wrap"><table><thead><tr><th>Día</th><th class="num">Sesiones</th><th class="num">Efectivo</th><th class="num">Tarjeta</th><th class="num">Transf.</th><th class="num">Gastos</th><th class="num">Retiros</th><th class="num">Total día</th><th class="num">Acumulado</th></tr></thead><tbody>' +
+      _rsFilas.map(function(f){ return '<tr><td><a href="#" onclick="irADia(\'' + f.fecha + '\');return false">' + fmtFCorta(f.fecha) + '</a></td><td class="num">' + f.sesiones + '</td><td class="num">' + $$(f.efectivo) + '</td><td class="num">' + $$(f.tarjeta) + '</td><td class="num">' + $$(f.transferencia) + '</td><td class="num">' + $$(f.gastos) + '</td><td class="num">' + $$(f.retiros) + '</td><td class="num"><b>' + $$(f.total) + '</b></td><td class="num">' + $$(f.acumulado) + '</td></tr>'; }).join('') +
+      '</tbody><tfoot><tr><td>Totales</td><td class="num">' + tot.sesiones + '</td><td class="num">' + $$(tot.efectivo) + '</td><td class="num">' + $$(tot.tarjeta) + '</td><td class="num">' + $$(tot.transferencia) + '</td><td class="num">' + $$(gT) + '</td><td class="num">' + $$(rT) + '</td><td class="num">' + $$(tot.total) + '</td><td></td></tr></tfoot></table></div>' : '<div class="vacio">No hay movimientos en este mes.</div>') + '</div>' +
+    '<div class="grid g2"><div class="card"><h3>Sesiones por equipo</h3><div class="barras-eq">' +
+      listaEquipos().map(function(e){ var n = tot.porEquipo[e.id] || 0; return '<div class="fila"><span><span class="ficha ' + e.ficha + '"></span>' + esc(e.nombre) + '</span><div class="barra' + (e.ficha === 'gris' ? '' : ' sol') + '"><i style="width:' + (n / maxEq * 100) + '%"></i></div><b style="text-align:right">' + n + '</b></div>'; }).join('') +
+      '</div><div class="nota" style="margin-top:8px"><span class="ficha gris"></span>Grises: ' + tot.fichas.gris + ' · <span class="ficha dorada"></span>Doradas: ' + tot.fichas.dorada + '</div></div>' +
+    '<div class="card"><h3>Ventas por servicio</h3>' + (servs.length ? '<div class="tabla-wrap"><table><tbody>' + servs.map(function(k){ return '<tr><td>' + esc(k) + '</td><td class="num">' + porServ[k].n + '</td><td class="num">' + $$(porServ[k].imp) + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<div class="vacio">—</div>') + '</div></div>';
+}
+function irADia(f){ if(_rsSuc && _rsSuc !== '*' && S.rol !== 'recepcion'){ S.suc = _rsSuc; $('selSucursal').value = _rsSuc; } S.fecha = f; mostrarTab('dia'); }
+function exportarResumen(){
+  if(!_rsFilas.length){ toast('No hay datos para exportar'); return; }
+  var cols = ['fecha','sesiones','efectivo','tarjeta','transferencia','gastos','retiros','total','acumulado'];
+  var csv = '﻿' + cols.join(';') + '\n' + _rsFilas.map(function(f){ return cols.map(function(c){ return c === 'fecha' ? fmtF(f[c]) : f[c]; }).join(';'); }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = 'bluesun_' + (_rsSuc === '*' ? 'todas' : nombreSuc(_rsSuc)) + '_' + _rsMes + '.csv';
+  a.click();
+}
+
+/* =========================================================
+   14. PRECIOS Y EQUIPOS (sólo admin)
+   ========================================================= */
+function renderPrecios(){
+  var servs = valores(S.servicios);
+  function tabla(tipo, titulo){
+    var l = ordenarPor(servs.filter(function(s){ return s.tipo === tipo; }), function(s){ return s.orden || 99; });
+    return '<div class="card"><h3>' + titulo + '<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarServicio(\'\',\'' + tipo + '\')">＋ Agregar</button></span></h3>' +
+      (l.length ? '<div class="tabla-wrap"><table><thead><tr><th>Nombre</th>' + (tipo !== 'producto' ? '<th>Equipo</th>' : '') + (tipo === 'abono' ? '<th class="num">Sesiones</th><th class="num">Dura</th>' : '') +
+      '<th class="num">💵 Efectivo</th><th class="num">💳 Tarjeta / Transf.</th><th></th></tr></thead><tbody>' +
+      l.map(function(s){
+        return '<tr style="' + (s.activo === false ? 'opacity:.45' : '') + '"><td><b>' + esc(s.nombre) + '</b>' + (s.aConfirmar ? ' <span class="badge b-warn">a confirmar</span>' : '') + (s.activo === false ? ' <span class="badge b-gris">inactivo</span>' : '') + '</td>' +
+          (tipo !== 'producto' ? '<td>' + esc(nombreEquipo(s.equipoId)) + '</td>' : '') +
+          (tipo === 'abono' ? '<td class="num">' + (s.sesiones || '') + '</td><td class="num">' + (s.dias ? s.dias + ' días' : '<span class="nota">sin definir</span>') + '</td>' : '') +
+          '<td class="num">' + (s.precioEfectivo ? $$(s.precioEfectivo) : '<span class="nota">libre</span>') + '</td><td class="num">' + (s.precioTarjeta ? $$(s.precioTarjeta) : '<span class="nota">libre</span>') + '</td>' +
+          '<td><button class="btn btn-sec btn-chico" onclick="editarServicio(\'' + s.id + '\')">✏️</button></td></tr>';
+      }).join('') + '</tbody></table></div>' : '<div class="vacio">Nada cargado.</div>') + '</div>';
+  }
+  $('tab-precios').innerHTML =
+    '<div class="aviso info" style="margin:0 0 18px">La transferencia se cobra al precio de tarjeta. Los precios marcados <b>a confirmar</b> salieron de la planilla y hay que revisarlos.</div>' +
+    tabla('sesion', '☀️ Sesiones') + tabla('abono', '🎟️ Abonos') + tabla('producto', '🧴 Productos') +
+    '<div class="card"><h3>🛏️ Equipos<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarEquipo(\'\')">＋ Agregar equipo</button></span></h3><div class="tabla-wrap"><table><thead><tr><th>Equipo</th><th>Fichas</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      listaEquipos().map(function(e){ return '<tr><td><b>' + esc(e.nombre) + '</b></td><td><span class="ficha ' + e.ficha + '"></span>' + (e.ficha === 'gris' ? 'Gris' : 'Dorada') + '</td><td>' + (e.activo === false ? '<span class="badge b-gris">Inactivo</span>' : '<span class="badge b-ok">Activo</span>') + '</td><td><button class="btn btn-sec btn-chico" onclick="editarEquipo(\'' + e.id + '\')">✏️</button></td></tr>'; }).join('') +
+    '</tbody></table></div></div>';
+}
+function editarServicio(id, tipo){
+  var s = id ? S.servicios[id] : { tipo:tipo, activo:true };
+  var eqs = listaEquipos();
+  abrirModal(id ? 'Editar ' + s.nombre : 'Nuevo ' + { sesion:'tipo de sesión', abono:'abono', producto:'producto' }[s.tipo],
+    '<div class="form-fila">' +
+    '<div class="c12 campo"><label>Nombre</label><input id="esNombre" value="' + esc(s.nombre || '') + '"></div>' +
+    (s.tipo !== 'producto' ? '<div class="c6 campo"><label>Equipo</label><select id="esEquipo">' + eqs.map(function(e){ return '<option value="' + esc(e.id) + '"' + (e.id === s.equipoId ? ' selected' : '') + '>' + esc(e.nombre) + '</option>'; }).join('') + '</select></div>' : '') +
+    (s.tipo === 'abono' ? '<div class="c3 campo"><label>Sesiones</label><input id="esSes" inputmode="numeric" value="' + (s.sesiones || '') + '"></div><div class="c3 campo"><label>Dura (días)</label><input id="esDias" inputmode="numeric" placeholder="sin definir" value="' + (s.dias || '') + '"></div>' : '') +
+    '<div class="c6 campo"><label>💵 Precio efectivo</label><input id="esEf" inputmode="numeric" value="' + (s.precioEfectivo || '') + '"></div>' +
+    '<div class="c6 campo"><label>💳 Precio tarjeta / transferencia</label><input id="esTj" inputmode="numeric" value="' + (s.precioTarjeta || '') + '"></div>' +
+    '<div class="c12"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="esActivo" ' + (s.activo !== false ? 'checked' : '') + '> Activo (aparece para anotar)</label></div>' +
+    '</div><div class="nota">Dejá el precio en 0 si se escribe a mano cada vez (ej. «Varios»).</div>',
+    '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" id="esGuardar">Guardar</button>');
+  $('esGuardar').onclick = function(){
+    var nombre = $('esNombre').value.trim(); if(!nombre){ toast('Falta el nombre', 'err'); return; }
+    var d = Object.assign({}, s, { nombre:nombre, precioEfectivo:num($('esEf').value), precioTarjeta:num($('esTj').value), activo:$('esActivo').checked, aConfirmar:false });
+    if(s.tipo !== 'producto') d.equipoId = $('esEquipo').value;
+    if(s.tipo === 'abono'){ d.sesiones = num($('esSes').value); d.dias = $('esDias').value ? num($('esDias').value) : ''; if(!d.sesiones){ toast('Indicá cuántas sesiones', 'err'); return; } }
+    var nid = id || DB.key(); delete d.id;
+    if(!id) d.orden = 999;
+    var u = {}; u['servicios/' + nid] = d;
+    DB.update(u).then(function(){ S.servicios[nid] = Object.assign({ id:nid }, d); cerrarModal(); toast('Guardado ✔', 'ok'); renderPrecios(); }).catch(errorCarga);
+  };
+}
+function editarEquipo(id){
+  var e = id ? S.equipos[id] : { ficha:'dorada', activo:true };
+  abrirModal(id ? 'Editar equipo' : 'Nuevo equipo',
+    '<div class="form-fila"><div class="c6 campo"><label>Nombre</label><input id="eeNombre" value="' + esc(e.nombre || '') + '"></div>' +
+    '<div class="c6 campo"><label>Usa fichas</label><select id="eeFicha"><option value="gris"' + (e.ficha === 'gris' ? ' selected' : '') + '>Grises</option><option value="dorada"' + (e.ficha !== 'gris' ? ' selected' : '') + '>Doradas</option></select></div>' +
+    '<div class="c12"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="eeActivo" ' + (e.activo !== false ? 'checked' : '') + '> Activo</label></div></div>' +
+    (id ? '' : '<div class="nota">Al crearlo se agrega también su «Sesión». Los abonos se agregan desde la lista de precios.</div>'),
+    '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" id="eeGuardar">Guardar</button>');
+  $('eeGuardar').onclick = function(){
+    var nombre = $('eeNombre').value.trim(); if(!nombre){ toast('Falta el nombre', 'err'); return; }
+    var nid = id || norm(nombre).replace(/[^a-z0-9]/g, '') || DB.key();
+    if(!id && S.equipos[nid]) nid += '-' + DB.key().slice(-4);
+    var d = { nombre:nombre, ficha:$('eeFicha').value, activo:$('eeActivo').checked, orden:e.orden || 99 };
+    var u = {}; u['equipos/' + nid] = d;
+    if(!id) u['servicios/ses-' + nid] = { nombre:'Sesión ' + nombre, tipo:'sesion', equipoId:nid, precioEfectivo:0, precioTarjeta:0, activo:true, aConfirmar:true, orden:99 };
+    DB.update(u).then(function(){
+      S.equipos[nid] = Object.assign({ id:nid }, d);
+      if(!id) S.servicios['ses-' + nid] = Object.assign({ id:'ses-' + nid }, u['servicios/ses-' + nid]);
+      cerrarModal(); toast('Guardado ✔', 'ok'); renderPrecios();
+    }).catch(errorCarga);
+  };
+}
+
+/* =========================================================
+   15. CONFIGURACIÓN (sólo admin)
+   ========================================================= */
+function renderConfig(){
+  var c = cfg();
+  var yaImportados = CLIENTES_PLANILLA.filter(function(x){ return existeCliente(x[0]); }).length;
+  $('tab-config').innerHTML =
+    '<div class="card"><h3>🏪 Sucursales<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarSucursal(\'\')">＋ Agregar sucursal</button></span></h3>' +
+      '<div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Dirección</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      listaSucursales().map(function(s){ return '<tr><td><b>' + esc(s.nombre) + '</b></td><td>' + esc(s.direccion || '') + '</td><td>' + (s.activa === false ? '<span class="badge b-gris">Inactiva</span>' : '<span class="badge b-ok">Activa</span>') + '</td><td><button class="btn btn-sec btn-chico" onclick="editarSucursal(\'' + s.id + '\')">✏️</button></td></tr>'; }).join('') +
+      '</tbody></table></div></div>' +
+    '<div class="card"><h3>👤 Usuarios</h3><div id="cfgUsuarios">' + (MODO_DEMO ? '<div class="nota">En modo demo no hay usuarios. Cuando conectes Firebase, acá vas a habilitar a cada persona y elegir su sucursal.</div>' : 'Cargando…') + '</div></div>' +
+    '<div class="card"><h3>🎟️ Opciones de abonos</h3>' +
+      '<label style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><input type="checkbox" ' + (c.abonoMultiLocalDefault ? 'checked' : '') + ' onchange="guardarConfig(\'abonoMultiLocalDefault\', this.checked)"> Al vender un abono, marcar por defecto «Se puede usar en otros locales»</label>' +
+      '<div class="campo" style="max-width:260px"><label>Avisar vencimientos con cuántos días de anticipación</label><input inputmode="numeric" value="' + (c.diasAvisoVencimiento || 7) + '" onchange="guardarConfig(\'diasAvisoVencimiento\', num(this.value) || 7)"></div></div>' +
+    '<div class="card"><h3>📥 Importar clientes de la planilla</h3>' +
+      '<p class="nota" style="margin-top:0">Carga los ' + CLIENTES_PLANILLA.length + ' clientes de <b>SEPTIEMBRE_SOLARIUM_CONGRESO.xlsx</b> (ya limpios: sin espacios de más, sin el « AB» y con los nombres mal escritos unificados). Los que ya existen no se duplican.</p>' +
+      '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-sol" onclick="importarClientesPlanilla()"' + (yaImportados === CLIENTES_PLANILLA.length ? ' disabled' : '') + '>Importar clientes</button>' +
+      '<span class="nota">' + yaImportados + ' de ' + CLIENTES_PLANILLA.length + ' ya están cargados.</span></div></div>' +
+    '<div class="card"><h3>💾 Copia de seguridad</h3><p class="nota" style="margin-top:0">Descarga todos los datos en un archivo JSON.</p>' +
+      '<button class="btn btn-sec" onclick="descargarBackup()">⬇️ Descargar copia</button>' +
+      (MODO_DEMO ? ' <button class="btn btn-err" onclick="if(confirm(\'¿Borrar TODOS los datos de prueba de este navegador?\')){DB.borrarTodo();location.reload();}">Borrar datos de prueba</button>' : '') + '</div>';
+  if(!MODO_DEMO) pintarUsuarios();
+}
+function existeCliente(nombre){ var n = norm(nombre); return valores(S.clientes).some(function(c){ return norm(c.nombre) === n; }); }
+function guardarConfig(k, v){ var u = {}; u['config/general/' + k] = v; DB.update(u).then(function(){ S.config.general = Object.assign({}, cfg()); S.config.general[k] = v; toast('Guardado ✔', 'ok'); }).catch(errorCarga); }
+function editarSucursal(id){
+  var s = id ? S.sucursales[id] : { activa:true };
+  abrirModal(id ? 'Editar sucursal' : 'Nueva sucursal',
+    '<div class="campo"><label>Nombre</label><input id="esuNombre" value="' + esc(s.nombre || '') + '" placeholder="Ej. San Martín"></div>' +
+    '<div class="campo"><label>Dirección</label><input id="esuDir" value="' + esc(s.direccion || '') + '"></div>' +
+    '<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="esuActiva" ' + (s.activa !== false ? 'checked' : '') + '> Activa</label>',
+    '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" id="esuGuardar">Guardar</button>');
+  $('esuGuardar').onclick = function(){
+    var nombre = $('esuNombre').value.trim(); if(!nombre){ toast('Falta el nombre', 'err'); return; }
+    var nid = id || norm(nombre).replace(/[^a-z0-9]/g, '') || DB.key();
+    if(!id && S.sucursales[nid]) nid += '-' + DB.key().slice(-4);
+    var d = { nombre:nombre, direccion:$('esuDir').value.trim(), activa:$('esuActiva').checked, orden:s.orden || 99 };
+    var u = {}; u['sucursales/' + nid] = d;
+    DB.update(u).then(function(){ S.sucursales[nid] = Object.assign({ id:nid }, d); cerrarModal(); toast('Sucursal guardada ✔', 'ok'); elegirSucursalInicial(); renderConfig(); }).catch(errorCarga);
+  };
+}
+function pintarUsuarios(){
+  Promise.all([DB.get('roles'), DB.get('solicitudes')]).then(function(r){
+    var roles = r[0] || {}, sol = r[1] || {};
+    var sucOpts = function(sel){ return '<option value="">— todas —</option>' + listaSucursales().map(function(s){ return '<option value="' + esc(s.id) + '"' + (s.id === sel ? ' selected' : '') + '>' + esc(s.nombre) + '</option>'; }).join(''); };
+    var rolOpts = function(sel){ return [['admin','Administrador'],['recepcion','Recepción'],['lector','Sólo lectura']].map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === sel ? ' selected' : '') + '>' + x[1] + '</option>'; }).join(''); };
+    var html = '';
+    var pend = Object.keys(sol).filter(function(uid){ return !roles[uid]; });
+    if(pend.length){
+      html += '<div class="aviso warn" style="margin:0 0 12px">Estas personas ingresaron y esperan que las habilites:</div><div class="tabla-wrap"><table><tbody>' +
+        pend.map(function(uid){ return '<tr><td><b>' + esc(sol[uid].email) + '</b><br><span class="nota">' + esc((sol[uid].fecha || '').slice(0, 10)) + '</span></td><td><select id="nr-rol-' + uid + '">' + rolOpts('recepcion') + '</select></td><td><select id="nr-suc-' + uid + '">' + sucOpts(S.suc) + '</select></td><td><button class="btn btn-pri btn-chico" onclick="habilitarUsuario(\'' + uid + '\',\'' + esc(sol[uid].email) + '\')">Habilitar</button></td></tr>'; }).join('') +
+        '</tbody></table></div><br>';
+    }
+    html += '<div class="tabla-wrap"><table><thead><tr><th>Usuario</th><th>Rol</th><th>Sucursal</th><th></th></tr></thead><tbody>' +
+      Object.keys(roles).map(function(uid){ var x = roles[uid];
+        return '<tr><td>' + esc(x.email || uid) + '</td><td><select onchange="cambiarRol(\'' + uid + '\',\'rol\',this.value)"' + (uid === S.uid ? ' disabled' : '') + '>' + rolOpts(x.rol) + '</select></td>' +
+          '<td><select onchange="cambiarRol(\'' + uid + '\',\'sucursal\',this.value)">' + sucOpts(x.sucursal) + '</select></td>' +
+          '<td>' + (uid === S.uid ? '<span class="nota">vos</span>' : '<button class="btn-icono" title="Quitar acceso" onclick="quitarAcceso(\'' + uid + '\')">🚫</button>') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      '<div class="nota" style="margin-top:10px">Para sumar a alguien: creale la cuenta en Firebase Console → Authentication → Agregar usuario. Cuando ingrese por primera vez, aparece arriba para habilitarlo. <b>Recepción</b> necesita una sucursal asignada.</div>';
+    $('cfgUsuarios').innerHTML = html;
+  }).catch(function(err){ $('cfgUsuarios').innerHTML = '<div class="aviso err">No se pudieron leer los usuarios: ' + esc(err.message) + '</div>'; });
+}
+function habilitarUsuario(uid, email){
+  var u = {}; u['roles/' + uid] = { rol:$('nr-rol-' + uid).value, sucursal:$('nr-suc-' + uid).value, email:email }; u['solicitudes/' + uid] = null;
+  DB.update(u).then(function(){ toast('Habilitado ✔', 'ok'); pintarUsuarios(); }).catch(errorCarga);
+}
+function cambiarRol(uid, campo, v){ var u = {}; u['roles/' + uid + '/' + campo] = v; DB.update(u).then(function(){ toast('Guardado ✔', 'ok'); }).catch(errorCarga); }
+function quitarAcceso(uid){ if(!confirm('¿Quitarle el acceso a esta persona?')) return; var u = {}; u['roles/' + uid] = null; DB.update(u).then(function(){ toast('Acceso quitado', 'ok'); pintarUsuarios(); }).catch(errorCarga); }
+function importarClientesPlanilla(){
+  var nuevos = CLIENTES_PLANILLA.filter(function(x){ return !existeCliente(x[0]); });
+  if(!nuevos.length){ toast('Ya estaban todos cargados'); return; }
+  if(!confirm('Se van a cargar ' + nuevos.length + ' clientes nuevos en la sucursal de alta «Congreso». ¿Seguimos?')) return;
+  var u = {}, ahora = new Date().toISOString();
+  nuevos.forEach(function(x){ u['clientes/' + DB.key()] = { nombre:x[0], telefono:'', notas:x[1] ? 'Revisar: ' + x[1] : '', sucursalAlta:'congreso', origen:'planilla sept', creado:ahora }; });
+  DB.update(u).then(function(){
+    Object.keys(u).forEach(function(k){ var id = k.split('/')[1]; S.clientes[id] = Object.assign({ id:id }, u[k]); });
+    toast(nuevos.length + ' clientes importados ✔', 'ok'); renderConfig();
+  }).catch(errorCarga);
+}
+function descargarBackup(){
+  DB.get('').then(function(d){
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 1)], { type:'application/json' }));
+    a.download = 'bluesun_backup_' + hoy() + '.json'; a.click();
+  }).catch(errorCarga);
+}
+
+/* =========================================================
+   ARRANQUE
+   ========================================================= */
+arrancar();
+</script>
+<!-- ===== FIN SCRIPT PRINCIPAL ===== -->
+</body>
+</html>
