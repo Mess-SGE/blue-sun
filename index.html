@@ -22,7 +22,10 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{font-family:'Outfit',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--texto);font-size:15px;-webkit-font-smoothing:antialiased}
+body{font-family:'Outfit',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--texto);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+/* Respuesta al tocar: sin demora de 300ms y feedback en el pointer-down */
+button,a,select,.ac-op,.chip-ab{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+:root{--rapido:100ms;--curva:cubic-bezier(.2,.8,.2,1)}
 button,input,select,textarea{font-family:inherit;font-size:15px}
 a{color:var(--azul2)}
 .oculto{display:none!important}
@@ -31,7 +34,7 @@ a{color:var(--azul2)}
 #login,#pendiente{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
   background:radial-gradient(circle at 80% 10%,rgba(245,166,35,.35),transparent 40%),linear-gradient(160deg,#0B3D91 0%,#0A2A66 60%,#061a40 100%)}
 .login-card{background:#fff;border-radius:24px;padding:36px 30px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-.login-card h1{margin:12px 0 2px;font-size:26px;color:var(--azul)}
+.login-card h1{margin:12px 0 2px;font-size:28px;color:var(--azul);letter-spacing:-.02em;line-height:1.1}
 .login-card p{margin:0 0 22px;color:var(--muted)}
 .logo-sol{width:64px;height:64px}
 .campo{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
@@ -42,7 +45,9 @@ input[type=checkbox]{width:auto}
 
 /* ===== Botones ===== */
 .btn{border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:transform .05s,filter .15s,background .15s;white-space:nowrap}
-.btn:active{transform:scale(.98)}
+.btn{transition:transform var(--rapido) ease-out,filter .15s,background .15s}
+.btn:active,.nav-btn:active,.chip-ab:active,.seg button:active,.btn-icono:active,.ac-op:active{transform:scale(.97)}
+.nav-btn,.chip-ab,.seg button,.btn-icono,.ac-op{transition:transform var(--rapido) ease-out,background .15s,color .15s}
 .btn-pri{background:var(--azul);color:#fff}.btn-pri:hover{filter:brightness(1.12)}
 .btn-sol{background:var(--sol);color:#3b2600}.btn-sol:hover{filter:brightness(1.05)}
 .btn-sec{background:#fff;color:var(--azul);border:1px solid var(--borde)}.btn-sec:hover{background:var(--azul-claro)}
@@ -55,7 +60,7 @@ input[type=checkbox]{width:auto}
 
 /* ===== Layout ===== */
 #app{display:flex;min-height:100vh}
-#sidebar{width:248px;background:linear-gradient(180deg,#0B3D91,#082C6B);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40;transition:transform .25s}
+#sidebar{width:248px;background:linear-gradient(180deg,#0B3D91,#082C6B);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:40;will-change:transform}
 .sb-marca{display:flex;align-items:center;gap:10px;padding:20px 18px 14px}
 .sb-marca b{font-size:20px;letter-spacing:.5px}
 .sb-marca small{display:block;opacity:.7;font-size:12px}
@@ -72,13 +77,15 @@ input[type=checkbox]{width:auto}
 .sb-pie .rol{display:inline-block;background:var(--sol);color:#3b2600;border-radius:20px;padding:1px 9px;font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase}
 .sb-pie button{margin-top:10px;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer}
 main{flex:1;margin-left:248px;min-width:0}
-.topbar{position:sticky;top:0;z-index:30;background:rgba(243,246,251,.92);backdrop-filter:blur(8px);display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--borde)}
-.topbar h2{margin:0;font-size:20px;font-weight:600}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(243,246,251,.72);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);display:flex;align-items:center;gap:12px;padding:14px 24px;box-shadow:0 1px 0 rgba(0,0,0,0);transition:box-shadow .2s}
+.topbar.con-borde{box-shadow:0 1px 0 rgba(15,23,42,.08),0 6px 16px -10px rgba(15,23,42,.25)}
+.topbar h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
 .topbar .sub{color:var(--muted);font-size:13px}
 #btnMenu{display:none;background:#fff;border:1px solid var(--borde);border-radius:10px;padding:6px 10px;font-size:18px;cursor:pointer}
 .contenido{padding:22px 24px 60px;max-width:1280px}
 #bannerDemo{background:var(--sol-claro);color:#7a4b00;border-bottom:1px solid #f3d9a4;padding:8px 24px;font-size:13px}
-#velo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35}
+#velo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:35;opacity:0;touch-action:pan-y}
+#bordeMenu{display:none;position:fixed;top:0;bottom:0;left:0;width:18px;z-index:34;touch-action:none}
 
 /* ===== Cards ===== */
 .card{background:var(--card);border:1px solid var(--borde);border-radius:var(--radio);padding:18px 20px;box-shadow:var(--sombra);margin-bottom:18px}
@@ -90,7 +97,7 @@ main{flex:1;margin-left:248px;min-width:0}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .kpi{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);padding:16px 18px;box-shadow:var(--sombra);position:relative;overflow:hidden}
 .kpi .et{font-size:13px;color:var(--muted)}
-.kpi .val{font-size:26px;font-weight:600;margin-top:4px;letter-spacing:-.5px}
+.kpi .val{font-size:26px;font-weight:600;margin-top:4px;letter-spacing:-.02em;line-height:1.1}
 .kpi .det{font-size:12px;color:var(--muted);margin-top:2px}
 .kpi::after{content:'';position:absolute;right:-20px;top:-20px;width:80px;height:80px;border-radius:50%;background:var(--azul-claro)}
 .kpi.sol::after{background:var(--sol-claro)}
@@ -155,16 +162,17 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
 .barras-eq .fila{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;margin:8px 0;font-size:14px}
 
 /* ===== Modal / toast ===== */
-#modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:40px 14px;overflow:auto}
+#modal{position:fixed;inset:0;background:rgba(15,23,42,0);display:none;align-items:flex-start;justify-content:center;z-index:60;padding:40px 14px;overflow:auto;transition:background .22s var(--curva),backdrop-filter .22s var(--curva)}
 #modal.abierto{display:flex}
-.modal-box{background:#fff;border-radius:20px;width:100%;max-width:640px;box-shadow:0 25px 60px rgba(0,0,0,.3);animation:sube .18s ease-out}
+#modal.visible{background:rgba(15,23,42,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.modal-box{background:#fff;border-radius:20px;width:100%;max-width:640px;box-shadow:0 25px 60px rgba(0,0,0,.3);opacity:0;transform:scale(.94);transition:transform .26s var(--curva),opacity .2s var(--curva)}
+#modal.visible .modal-box{opacity:1;transform:none}
 .modal-cab{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--borde)}
 .modal-cab h3{margin:0;font-size:18px}
 .modal-cuerpo{padding:18px 22px}
 .modal-pie{padding:14px 22px;border-top:1px solid var(--borde);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-@keyframes sube{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
-#toast.ver{opacity:1}
+#toast{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,16px);background:#111827;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:80;opacity:0;pointer-events:none;transition:opacity .2s var(--curva),transform .28s var(--curva);max-width:90vw}
+#toast.ver{opacity:1;transform:translate(-50%,0)}
 #toast.err{background:var(--err)}
 #toast.ok{background:var(--ok)}
 
@@ -174,9 +182,8 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
   .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:760px){
-  #sidebar{transform:translateX(-100%)}
-  #sidebar.abierto{transform:none}
-  #sidebar.abierto ~ #velo{display:block}
+  #sidebar{transform:translateX(-100%);box-shadow:8px 0 30px rgba(0,0,0,.25);touch-action:pan-y}
+  #bordeMenu{display:block}
   main{margin-left:0}
   #btnMenu{display:block}
   .topbar{padding:12px 16px}
@@ -186,6 +193,20 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
   .kpi .val{font-size:22px}
   .card{padding:16px}
   #bannerDemo{padding:8px 16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  .modal-box,#toast{transition:opacity .2s ease!important;transform:none!important}
+  #toast{transform:translateX(-50%)!important}
+  .btn:active,.nav-btn:active,.chip-ab:active,.seg button:active{transform:none}
+}
+@media (prefers-reduced-transparency:reduce){
+  .topbar{background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none}
+  #modal.visible{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,23,42,.6)}
+}
+@media (prefers-contrast:more){
+  :root{--borde:#8A9099;--muted:#374151}
+  .topbar{background:var(--bg);border-bottom:1px solid var(--borde)}
 }
 </style>
 </head>
@@ -233,6 +254,7 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:#FAFBFD}
     </div>
   </aside>
   <div id="velo" onclick="toggleMenu(false)"></div>
+  <div id="bordeMenu" aria-hidden="true"></div>
   <main>
     <div id="bannerDemo" class="oculto">🧪 <b>Modo demo:</b> todavía no está conectado a Firebase. Los datos se guardan sólo en este navegador (sirve para probar).</div>
     <div class="topbar">
@@ -309,12 +331,32 @@ function toast(msg, tipo){
   var t = $('toast'); t.textContent = msg; t.className = 'ver ' + (tipo || '');
   clearTimeout(_toastT); _toastT = setTimeout(function(){ t.className = ''; }, 3200);
 }
+// El modal nace desde donde se tocó (origen anclado al disparador) y se va por el mismo camino
+var _ultimoToque = null, _modalT;
+document.addEventListener('pointerdown', function(e){ _ultimoToque = { x:e.clientX, y:e.clientY }; }, true);
+document.addEventListener('touchstart', function(){}, { passive:true }); // habilita :active en Safari iOS
 function abrirModal(titulo, cuerpo, pie){
+  var m = $('modal'), yaAbierto = m.classList.contains('visible');
+  clearTimeout(_modalT);
   $('modalBox').innerHTML = '<div class="modal-cab"><h3>' + esc(titulo) + '</h3><button class="btn-icono" onclick="cerrarModal()">✕</button></div>' +
     '<div class="modal-cuerpo">' + cuerpo + '</div>' + (pie ? '<div class="modal-pie">' + pie + '</div>' : '');
-  $('modal').classList.add('abierto');
+  m.classList.add('abierto');
+  if(!yaAbierto){
+    var box = $('modalBox'), r = box.getBoundingClientRect();
+    box.style.transformOrigin = _ultimoToque ? Math.round(_ultimoToque.x - r.left) + 'px ' + Math.round(_ultimoToque.y - r.top) + 'px' : '50% 0';
+    void box.offsetWidth; // fuerza el estado inicial antes de animar
+    m.classList.add('visible');
+  }
 }
-function cerrarModal(){ $('modal').classList.remove('abierto'); }
+function cerrarModal(){
+  var m = $('modal');
+  if(!m.classList.contains('abierto')) return;
+  m.classList.remove('visible');
+  clearTimeout(_modalT);
+  _modalT = setTimeout(function(){ m.classList.remove('abierto'); }, 260);
+}
+// Háptica sólo en momentos que importan (guardar); dispositivos sin vibración lo ignoran
+function vibrar(p){ try { if(navigator.vibrate && !matchMedia('(prefers-reduced-motion: reduce)').matches) navigator.vibrate(p); } catch(e){} }
 
 /* =========================================================
    3. CAPA DE DATOS
@@ -485,6 +527,7 @@ function arrancar(){
 
 function iniciarApp(){
   mostrarPantalla('app');
+  engancharMenuMovil();
   $('sbUsuario').textContent = S.email;
   $('sbRol').textContent = { admin:'Administrador', recepcion:'Recepción', lector:'Sólo lectura' }[S.rol] || S.rol;
   cargarCatalogos().then(function(){
@@ -546,7 +589,103 @@ function mostrarTab(t){
   cerrarModal();
   TABS[t].render();
 }
-function toggleMenu(forzar){ var sb = $('sidebar'); sb.classList.toggle('abierto', forzar === undefined ? !sb.classList.contains('abierto') : forzar); }
+/* ---------- Menú lateral en el celular ----------
+   Se arrastra 1:1 con el dedo (respetando dónde se agarró), se puede frenar y revertir
+   en cualquier momento, y al soltar sigue con la velocidad del dedo (resorte).
+   Se decide abrir/cerrar proyectando hacia dónde iba el gesto, no por dónde se soltó. */
+var MQ_MOVIL = matchMedia('(max-width:760px)');
+var MENU = { x:null, v:0, raf:0, arrastre:null, abierto:false };
+function menuAncho(){ return $('sidebar').offsetWidth || 248; }
+function menuPintar(x){
+  var w = menuAncho(), p = Math.max(0, Math.min(1, 1 + x / w));
+  MENU.x = x;
+  $('sidebar').style.transform = 'translateX(' + x + 'px)';
+  var velo = $('velo');
+  velo.style.display = p > 0.001 ? 'block' : 'none';
+  velo.style.opacity = p;
+}
+function menuResetEscritorio(){
+  cancelAnimationFrame(MENU.raf); MENU.arrastre = null; MENU.abierto = false; MENU.x = null;
+  $('sidebar').style.transform = ''; $('velo').style.display = 'none';
+}
+// Resorte con los dos parámetros de Apple: amortiguación (1 = sin rebote) y respuesta (seg)
+function menuResorte(destino, velocidad, amort, resp){
+  cancelAnimationFrame(MENU.raf);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ menuPintar(destino); return; }
+  var k = Math.pow(2 * Math.PI / resp, 2), c = 4 * Math.PI * amort / resp;
+  var x = MENU.x == null ? -menuAncho() : MENU.x, v = velocidad || 0, t0 = performance.now();
+  function paso(t){
+    var dt = Math.min(1 / 30, (t - t0) / 1000); t0 = t;
+    for(var i = 0; i < 4; i++){ var a = -k * (x - destino) - c * v; v += a * dt / 4; x += v * dt / 4; }
+    MENU.v = v;
+    if(Math.abs(x - destino) < 0.4 && Math.abs(v) < 8){ menuPintar(destino); MENU.v = 0; return; }
+    menuPintar(x);
+    MENU.raf = requestAnimationFrame(paso);
+  }
+  MENU.raf = requestAnimationFrame(paso);
+}
+function toggleMenu(forzar){
+  if(!MQ_MOVIL.matches) return;
+  var abrir = forzar === undefined ? !MENU.abierto : !!forzar;
+  if(!abrir && !MENU.abierto && (MENU.x == null || MENU.x <= -menuAncho())) { menuPintar(-menuAncho()); return; }
+  MENU.abierto = abrir;
+  menuResorte(abrir ? 0 : -menuAncho(), MENU.v, 1, 0.35); // tocado con botón: sin rebote
+}
+function rubberband(exceso, dim){ var c = 0.55; return (exceso * dim * c) / (dim + c * Math.abs(exceso)); }
+function proyectar(v, d){ d = d || 0.99; return (v / 1000) * d / (1 - d); }
+function menuPointerDown(e){
+  if(!MQ_MOVIL.matches || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  cancelAnimationFrame(MENU.raf); // se puede agarrar en pleno movimiento, desde donde está
+  if(MENU.x == null) MENU.x = -menuAncho();
+  MENU.arrastre = { id:e.pointerId, x0:e.clientX, y0:e.clientY, base:MENU.x, decidido:false, hist:[{ x:e.clientX, t:e.timeStamp }], el:e.currentTarget };
+}
+function menuPointerMove(e){
+  var a = MENU.arrastre; if(!a || e.pointerId !== a.id) return;
+  var dx = e.clientX - a.x0, dy = e.clientY - a.y0;
+  if(!a.decidido){
+    if(Math.abs(dx) < 10 && Math.abs(dy) < 10) return;           // histéresis antes de comprometerse
+    if(Math.abs(dy) > Math.abs(dx)){ MENU.arrastre = null; return; } // era scroll vertical
+    a.decidido = true; MENU.huboArrastre = true;
+  }
+  a.hist.push({ x:e.clientX, t:e.timeStamp }); if(a.hist.length > 6) a.hist.shift();
+  var w = menuAncho(), x = a.base + dx;
+  if(x > 0) x = rubberband(x, w);                                   // resistencia progresiva al pasarse
+  else if(x < -w) x = -w;
+  menuPintar(x);
+}
+function menuPointerUp(e){
+  var a = MENU.arrastre; if(!a || e.pointerId !== a.id) return;
+  MENU.arrastre = null;
+  if(!a.decidido){
+    // lo agarraron en pleno movimiento y lo soltaron sin arrastrar: sigue hacia donde iba
+    var fin = MENU.abierto ? 0 : -menuAncho();
+    if(Math.abs(MENU.x - fin) > 0.5) menuResorte(fin, 0, 1, 0.35);
+    return;
+  }
+  var h = a.hist, p = h[0], u = h[h.length - 1], dt = (u.t - p.t) / 1000;
+  var v = dt > 0 ? (u.x - p.x) / dt : 0;
+  var w = menuAncho(), destino = (MENU.x + proyectar(v)) > -w / 2 ? 0 : -w;
+  MENU.abierto = destino === 0;
+  menuResorte(destino, v, 0.8, 0.3);                                // soltado con impulso: un poquito de rebote
+  setTimeout(function(){ MENU.huboArrastre = false; }, 0);
+}
+function engancharMenuMovil(){
+  ['sidebar','velo','bordeMenu'].forEach(function(id){
+    var el = $(id);
+    el.addEventListener('pointerdown', menuPointerDown);
+    // un arrastre no tiene que disparar el clic del botón que estaba debajo
+    el.addEventListener('click', function(e){ if(MENU.huboArrastre){ e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+  });
+  // el dedo sale enseguida del borde: el seguimiento se escucha en toda la ventana
+  window.addEventListener('pointermove', menuPointerMove);
+  window.addEventListener('pointerup', menuPointerUp);
+  window.addEventListener('pointercancel', menuPointerUp);
+  function acomodar(){ if(MQ_MOVIL.matches) menuPintar(MENU.abierto ? 0 : -menuAncho()); else menuResetEscritorio(); }
+  if(MQ_MOVIL.addEventListener) MQ_MOVIL.addEventListener('change', acomodar); else MQ_MOVIL.addListener(acomodar);
+  acomodar();
+  // Borde del encabezado sólo cuando hay contenido pasando por debajo
+  window.addEventListener('scroll', function(){ var tb = document.querySelector('.topbar'); if(tb) tb.classList.toggle('con-borde', window.scrollY > 4); }, { passive:true });
+}
 
 /* =========================================================
    8. ABONOS — lógica común
@@ -849,6 +988,7 @@ function guardarMov(){
     Object.keys(u).forEach(function(k){ var p = k.split('/'); if(p[0] === 'abonos' && p.length === 2) S.abonos[p[1]] = Object.assign({ id:p[1] }, u[k]); if(p[0] === 'clientes' && S.clientes[p[1]]) S.clientes[p[1]].ultimaVisita = S.fecha; });
     if(ab) S.abonos[ab.id].usadas = (S.abonos[ab.id].usadas || 0) + 1;
     toast(ab ? 'Sesión descontada del abono ✔' : 'Guardado ✔', 'ok');
+    vibrar(10);
     F = formVacio();
     return recalcularDia();
   }).then(pintarDia).catch(function(err){ errorCarga(err); var b = $('btnGuardarMov'); if(b) b.disabled = false; });

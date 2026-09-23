@@ -18,6 +18,14 @@ Contexto técnico para asistentes de IA. Documentación para personas: `README.m
 
 `TABS` / `ALL_TABS` → `mostrarTab(nombre)`. Cada tab tiene su `<section id="tab-<nombre>">` en el HTML y una función `render<Nombre>()`. Para agregar una pantalla hay que tocar los dos lugares.
 
+## Interacción (criterios de diseño tipo Apple)
+
+- **Menú lateral en celular** (`MENU`, `menuResorte`, `menuPointer*`): se arrastra 1:1 respetando dónde se agarró, desde el borde izquierdo (`#bordeMenu`), desde el menú o desde el velo. Se puede agarrar en pleno movimiento, porque arranca desde `MENU.x`, el valor en pantalla. Al soltar se decide abrir o cerrar **proyectando la velocidad** (`proyectar`), no por la posición. El movimiento es un resorte con amortiguación y respuesta: botón = `1 / 0.35`, sin rebote; soltado con impulso = `0.8 / 0.3`. Pasado de abierto tiene resistencia (`rubberband`). `pointermove`/`pointerup` se escuchan en `window`, no en el elemento, porque el dedo sale enseguida de la franja del borde. Un arrastre anula el clic de abajo (`MENU.huboArrastre`). En escritorio (`MQ_MOVIL` falso) no hay transform inline.
+- **Modal**: aparece desde el punto donde se tocó (`transform-origin` = `_ultimoToque`) y se cierra por el mismo camino. `cerrarModal()` quita `.visible` y recién a los 260 ms quita `.abierto`; `abrirModal()` cancela ese cierre si llega antes.
+- **Toast**: entra y sale desde abajo. **Háptica** (`vibrar`) sólo al guardar un movimiento.
+- Todos los tocables responden en el *pointer-down* (`:active` con escala .97, `touch-action: manipulation`).
+- Se respetan `prefers-reduced-motion` (el menú salta sin resorte y todo pasa a fundidos), `prefers-reduced-transparency` y `prefers-contrast: more`.
+
 ## Modelo de datos (`bluesun/…`)
 
 | Ruta | Contenido |
