@@ -197,6 +197,8 @@ tfoot td{font-weight:600;border-top:2px solid var(--borde);background:var(--hove
 .persona button{border:none;background:transparent;color:inherit;cursor:pointer;width:22px;height:22px;border-radius:50%;font-size:13px}
 .persona button:hover{background:rgba(234,35,92,.15)}
 .a-cargo select{width:auto;padding:6px 10px;font-size:13px;border-radius:20px}
+.persona .turno-sel{border:none;background:rgba(255,255,255,.55);color:inherit;font-size:12px;padding:2px 4px;border-radius:10px;width:auto;margin-left:2px}
+select.falta{border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-claro)}
 .b-encargada{background:var(--azul-claro);color:var(--marca-texto)}
 .b-recepcionista{background:var(--ok-claro);color:var(--ok)}
 .b-supervisora{background:var(--warn-claro);color:var(--warn)}
@@ -1043,9 +1045,11 @@ function pintarFormulario(){
       '</div>' + (serv.dias ? '' : '<div class="nota" style="margin-top:6px">Este abono no tiene duración configurada: dejá «Vence» vacío si no vence, o poné la fecha a mano.</div>');
     }
   }
-  html += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
-    '<button class="btn btn-sec" onclick="F=formVacio();pintarFormulario()">Limpiar</button>' +
-    '<button class="btn btn-pri" id="btnGuardarMov" onclick="guardarMov()">Guardar</button></div>';
+  html += '<div style="display:flex;gap:10px;justify-content:space-between;align-items:flex-end;margin-top:16px;flex-wrap:wrap">' +
+    '<div class="campo" style="margin:0;min-width:220px"><label>👩‍💼 Responsable de la carga</label>' + selectorResponsable() + '</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-sec" onclick="var r=F.responsable;F=formVacio();F.responsable=r;pintarFormulario()">Limpiar</button>' +
+    '<button class="btn btn-pri" id="btnGuardarMov" onclick="guardarMov()">Guardar</button></div></div>';
   $('diaForm').innerHTML = html;
 }
 
@@ -1122,6 +1126,8 @@ function guardarMov(){
     if(e.cod === 'vencido' && !confirm('El abono venció el ' + fmtF(ab.vence) + '. ¿Usarlo igual?')) return;
   }
   var importe = ab ? 0 : num(F.importe);
+  var resp = datosResponsable();
+  if(opcionesResponsable().length && !resp){ toast('Elegí quién es responsable de la carga', 'err'); var fr = $('fResp'); if(fr) fr.focus(); return; }
   if(!ab && importe <= 0 && !confirm('El importe es $0. ¿Guardar igual?')) return;
 
   var id = DB.key(), cli = S.clientes[F.clienteId];
@@ -1132,6 +1138,7 @@ function guardarMov(){
     forma: ab ? 'abono' : F.forma, importe:importe, nota:(F.nota || '').trim(),
     usuario:S.email, creado:new Date().toISOString()
   };
+  if(resp){ mov.responsableId = resp.id; mov.responsable = resp.nombre; }
   var u = {};
   if(ab){ mov.abonoId = ab.id; mov.abonoNombre = ab.nombre; mov.equipoId = ab.equipoId; mov.sesion = true; }
   if(serv.tipo === 'abono'){
@@ -1154,7 +1161,7 @@ function guardarMov(){
     if(ab) S.abonos[ab.id].usadas = (S.abonos[ab.id].usadas || 0) + 1;
     toast(ab ? 'Sesión descontada del abono ✔' : 'Guardado ✔', 'ok');
     vibrar(10);
-    F = formVacio();
+    var r = F.responsable; F = formVacio(); F.responsable = r;
     return recalcularDia();
   }).then(pintarDia).catch(function(err){ errorCarga(err); var b = $('btnGuardarMov'); if(b) b.disabled = false; });
 }
@@ -1166,7 +1173,7 @@ function pintarMovs(){
   $('diaTotalesMini').innerHTML = '<span class="badge b-azul">' + t.sesiones + ' sesiones</span><span class="badge b-sol">' + $$(t.total) + '</span>';
   if(!movs.length){ $('diaMovs').innerHTML = '<div class="vacio">Todavía no hay nada anotado este día.</div>'; return; }
   var etForma = { efectivo:'<span class="badge b-ok">Efectivo</span>', tarjeta:'<span class="badge b-azul">Tarjeta</span>', transferencia:'<span class="badge b-azul">Transf.</span>', abono:'<span class="badge b-sol">Abono</span>' };
-  $('diaMovs').innerHTML = '<div class="tabla-wrap"><table><thead><tr><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Equipo</th><th>Pago</th><th class="num">Importe</th><th></th></tr></thead><tbody>' +
+  $('diaMovs').innerHTML = '<div class="tabla-wrap"><table><thead><tr><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Equipo</th><th>Pago</th><th class="num">Importe</th><th>Cargó</th><th></th></tr></thead><tbody>' +
     movs.map(function(m){
       var eq = S.equipos[m.equipoId];
       return '<tr><td>' + esc(m.hora) + '</td>' +
@@ -1175,8 +1182,9 @@ function pintarMovs(){
         '<td>' + (m.sesion && eq ? '<span class="ficha ' + eq.ficha + '"></span>' + esc(eq.nombre) : '<span class="nota">—</span>') + '</td>' +
         '<td>' + (etForma[m.forma] || esc(m.forma)) + '</td>' +
         '<td class="num">' + (m.forma === 'abono' ? '<span class="nota">—</span>' : $$(m.importe)) + '</td>' +
+        '<td class="nota">' + esc(m.responsable || '—') + '</td>' +
         '<td>' + (esAdmin() ? '<button class="btn-icono" title="Borrar" onclick="borrarMov(\'' + m.id + '\')">🗑️</button>' : '') + '</td></tr>';
-    }).join('') + '</tbody><tfoot><tr><td colspan="5">Efectivo ' + $$(t.efectivo) + ' · Tarjeta ' + $$(t.tarjeta) + ' · Transf. ' + $$(t.transferencia) + '</td><td class="num">' + $$(t.total) + '</td><td></td></tr></tfoot></table></div>';
+    }).join('') + '</tbody><tfoot><tr><td colspan="5">Efectivo ' + $$(t.efectivo) + ' · Tarjeta ' + $$(t.tarjeta) + ' · Transf. ' + $$(t.transferencia) + '</td><td class="num">' + $$(t.total) + '</td><td></td><td></td></tr></tfoot></table></div>';
 }
 function borrarMov(id){
   var m = D.movs[id]; if(!m) return;
@@ -1218,7 +1226,7 @@ function pintarCaja(){
   function lista(tipo, et1){
     var items = valores(D.caja[tipo]);
     return (items.length ? items.map(function(x){
-      return '<div class="item-lista"><span>' + esc(x.desc) + '</span><span>' + $$(x.importe) + (esAdmin() ? ' <button class="btn-icono" onclick="borrarItemCaja(\'' + tipo + '\',\'' + x.id + '\')">✕</button>' : '') + '</span></div>';
+      return '<div class="item-lista"><span>' + esc(x.desc) + (x.responsable ? ' <span class="nota">· ' + esc(x.responsable) + '</span>' : '') + '</span><span>' + $$(x.importe) + (esAdmin() ? ' <button class="btn-icono" onclick="borrarItemCaja(\'' + tipo + '\',\'' + x.id + '\')">✕</button>' : '') + '</span></div>';
     }).join('') : '<div class="nota" style="padding:4px 0">Sin ' + tipo + '.</div>') +
     (ed ? '<div style="display:flex;gap:6px;margin-top:6px"><input id="nuevo-' + tipo + '-desc" placeholder="' + et1 + '"><input id="nuevo-' + tipo + '-imp" class="mini-input" inputmode="numeric" placeholder="$"><button class="btn btn-sec btn-chico" onclick="agregarItemCaja(\'' + tipo + '\')">＋</button></div>' : '');
   }
@@ -1243,8 +1251,10 @@ function agregarItemCaja(tipo){
   var d = $('nuevo-' + tipo + '-desc').value.trim(), imp = num($('nuevo-' + tipo + '-imp').value);
   if(!d || imp <= 0){ toast('Completá descripción e importe', 'err'); return; }
   var id = DB.key(), u = {};
-  u[rutaCaja() + '/' + tipo + '/' + id] = { desc:d, importe:imp, usuario:S.email };
-  DB.update(u).then(function(){ D.caja[tipo] = D.caja[tipo] || {}; D.caja[tipo][id] = { id:id, desc:d, importe:imp }; return recalcularDia(); })
+  var resp = datosResponsable();
+  var item = { desc:d, importe:imp, usuario:S.email, responsable:resp ? resp.nombre : '' };
+  u[rutaCaja() + '/' + tipo + '/' + id] = item;
+  DB.update(u).then(function(){ D.caja[tipo] = D.caja[tipo] || {}; D.caja[tipo][id] = Object.assign({ id:id }, item); return recalcularDia(); })
     .then(function(){ pintarCaja(); }).catch(errorCarga);
 }
 function borrarItemCaja(tipo, id){
@@ -1707,22 +1717,34 @@ function editarEquipo(id){
    Se guarda también el NOMBRE para que el historial se lea aunque la ficha cambie o se borre.
    ========================================================= */
 var PUESTOS = { encargada:'Encargada', recepcionista:'Recepcionista', supervisora:'Supervisora' };
+var TURNOS = { manana:'Mañana', tarde:'Tarde', noche:'Noche', completo:'Completo', rotativo:'Rotativo' };
+// Un «a cargo» guardado: { nombre, turno, reemplazo, desde } (los días viejos guardaban sólo el nombre)
+function datoACargo(v){ return typeof v === 'string' ? { nombre:v } : (v || {}); }
 function listaPersonal(soloActivos, sucId){
   return ordenarPor(valores(S.personal).filter(function(x){
     return (!soloActivos || x.activo !== false) && (!sucId || !x.sucursalId || x.sucursalId === sucId);
   }), function(x){ return ('00000' + (x.orden || 999)).slice(-5) + norm(x.nombre); });
 }
-function nombresACargo(caja){ var a = caja && caja.aCargo || {}; return Object.keys(a).map(function(k){ return a[k]; }).filter(Boolean); }
+function nombresACargo(caja){
+  var a = caja && caja.aCargo || {};
+  return Object.keys(a).map(function(k){
+    var d = datoACargo(a[k]); if(!d.nombre) return '';
+    return d.nombre + (d.turno ? ' (' + (TURNOS[d.turno] || d.turno) + ')' : '') + (d.reemplazo ? ' 🔁' : '');
+  }).filter(Boolean);
+}
+// ¿Puede estar a cargo en esta sucursal? Las de la sucursal (o «todas») y, como reemplazo, las que cubren otras sucursales
+function esDeSucursal(x, suc){ return !x.sucursalId || x.sucursalId === suc; }
 function renderPersonal(){
   var l = listaPersonal();
   $('tab-personal').innerHTML = '<div class="card"><h3>👩‍💼 Personal<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarPersona(\'\')">＋ Agregar persona</button></span></h3>' +
     '<p class="nota" style="margin-top:0">Encargadas, recepcionistas y supervisoras. En la Planilla del día se elige quién está a cargo, y en el control de fichas quién supervisó.</p>' +
-    (l.length ? '<div class="tabla-wrap"><table><thead><tr><th></th><th>Nombre</th><th>Puesto</th><th>Sucursal</th><th>Teléfono</th><th>Estado</th><th></th></tr></thead><tbody>' +
+    (l.length ? '<div class="tabla-wrap"><table><thead><tr><th></th><th>Nombre</th><th>Puesto</th><th>Turno</th><th>Sucursal</th><th>Teléfono</th><th>Estado</th><th></th></tr></thead><tbody>' +
       l.map(function(x, i){
         return '<tr data-id="' + x.id + '" style="' + (x.activo === false ? 'opacity:.45' : '') + '">' + asa('personal') +
           '<td><b>' + esc(x.nombre) + '</b>' + (x.notas ? '<br><span class="nota">' + esc(x.notas) + '</span>' : '') + '</td>' +
           '<td><span class="badge b-' + esc(x.puesto) + '">' + esc(PUESTOS[x.puesto] || x.puesto) + '</span></td>' +
-          '<td>' + (x.sucursalId ? esc(nombreSuc(x.sucursalId)) : '<span class="nota">Todas</span>') + '</td>' +
+          '<td>' + (x.turno ? esc(TURNOS[x.turno] || x.turno) : '<span class="nota">—</span>') + (x.horario ? '<br><span class="nota">' + esc(x.horario) + '</span>' : '') + '</td>' +
+          '<td>' + (x.sucursalId ? esc(nombreSuc(x.sucursalId)) : '<span class="nota">Todas</span>') + (x.reemplazos && x.sucursalId ? '<br><span class="badge b-azul">🔁 hace reemplazos</span>' : '') + '</td>' +
           '<td>' + esc(x.telefono || '') + ' ' + botonWhatsapp(x.telefono) + '</td>' +
           '<td>' + (x.activo === false ? '<span class="badge b-gris">Inactiva</span>' : '<span class="badge b-ok">Activa</span>') + '</td>' +
           '<td class="acc-fila">' + flechasOrden('personal', x.id, i, l.length) + '<button class="btn btn-sec btn-chico" onclick="editarPersona(\'' + x.id + '\')">✏️</button></td></tr>';
@@ -1738,7 +1760,10 @@ function editarPersona(id){
     '<div class="c6 campo"><label>Sucursal</label><select id="epSuc"><option value="">Todas</option>' + listaSucursales().map(function(su){ return '<option value="' + esc(su.id) + '"' + (x.sucursalId === su.id ? ' selected' : '') + '>' + esc(su.nombre) + '</option>'; }).join('') + '</select></div>' +
     '<div class="c6 campo"><label>Teléfono / WhatsApp</label><input id="epTel" inputmode="tel" value="' + esc(x.telefono || '') + '"></div>' +
     '<div class="c6 campo"><label>DNI</label><input id="epDni" inputmode="numeric" value="' + esc(x.dni || '') + '"></div>' +
-    '<div class="c12 campo"><label>Notas (horario, turno…)</label><input id="epNotas" value="' + esc(x.notas || '') + '"></div>' +
+    '<div class="c6 campo"><label>Turno habitual</label><select id="epTurno"><option value="">—</option>' + Object.keys(TURNOS).map(function(k){ return '<option value="' + k + '"' + (x.turno === k ? ' selected' : '') + '>' + TURNOS[k] + '</option>'; }).join('') + '</select></div>' +
+    '<div class="c6 campo"><label>Horario</label><input id="epHorario" placeholder="Ej. 9 a 15 · lun a sáb" value="' + esc(x.horario || '') + '"></div>' +
+    '<div class="c12"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="epReemplazos" ' + (x.reemplazos ? 'checked' : '') + '> Hace reemplazos en otras sucursales (aparece para elegir en sus planillas)</label></div>' +
+    '<div class="c12 campo" style="margin-top:10px"><label>Notas</label><input id="epNotas" value="' + esc(x.notas || '') + '"></div>' +
     '<div class="c12"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="epActivo" ' + (x.activo !== false ? 'checked' : '') + '> Activa (aparece para elegir en la planilla)</label></div></div>',
     (id ? '<button class="btn btn-err" onclick="borrarPersona(\'' + id + '\')">Borrar</button>' : '') +
     '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" id="epGuardar">Guardar</button>');
@@ -1747,6 +1772,7 @@ function editarPersona(id){
     if(!nombre){ toast('Falta el nombre', 'err'); return; }
     var nid = id || DB.key();
     var d = { nombre:nombre, puesto:$('epPuesto').value, sucursalId:$('epSuc').value, telefono:$('epTel').value.trim(), dni:$('epDni').value.trim(),
+              turno:$('epTurno').value, horario:$('epHorario').value.trim(), reemplazos:$('epReemplazos').checked,
               notas:$('epNotas').value.trim(), activo:$('epActivo').checked, orden:x.orden || 999 };
     var u = {}; u['config/personal/' + nid] = d;
     DB.update(u).then(function(){ S.personal[nid] = Object.assign({ id:nid }, d); cerrarModal(); toast('Guardado ✔', 'ok'); renderPersonal(); }).catch(errorCarga);
@@ -1759,38 +1785,78 @@ function borrarPersona(id){
   var u = {}; u['config/personal/' + id] = null;
   DB.update(u).then(function(){ delete S.personal[id]; cerrarModal(); toast('Borrada', 'ok'); renderPersonal(); }).catch(errorCarga);
 }
-// «A cargo hoy» en la planilla del día
+// «A cargo hoy» en la planilla del día: quién, en qué turno y si viene de reemplazo de otra sucursal
 function pintarACargo(){
   var el = $('diaACargo'); if(!el) return;
   var ac = D.caja.aCargo || {}, ed = puedeCargar();
   var chips = Object.keys(ac).map(function(k){
-    var p = S.personal[k];
-    return '<span class="persona">' + esc(ac[k]) + (p ? ' <small>' + esc(PUESTOS[p.puesto] || '') + '</small>' : '') +
+    var d = datoACargo(ac[k]), p = S.personal[k];
+    var turno = ed ? '<select class="turno-sel" title="Turno" onchange="cambiarTurnoACargo(\'' + k + '\', this.value)"><option value="">turno…</option>' +
+        Object.keys(TURNOS).map(function(t){ return '<option value="' + t + '"' + (d.turno === t ? ' selected' : '') + '>' + TURNOS[t] + '</option>'; }).join('') + '</select>'
+      : (d.turno ? ' <small>' + esc(TURNOS[d.turno] || d.turno) + '</small>' : '');
+    return '<span class="persona">' + esc(d.nombre || '') + (p ? ' <small>' + esc(PUESTOS[p.puesto] || '') + '</small>' : '') + turno +
+      (d.reemplazo ? ' <small title="Reemplazo de otra sucursal">🔁 ' + esc(nombreSuc(d.desde)) + '</small>' : '') +
       (ed ? '<button title="Quitar" onclick="quitarACargo(\'' + k + '\')">✕</button>' : '') + '</span>';
   }).join('');
-  var disp = listaPersonal(true, S.suc).filter(function(x){ return !ac[x.id]; });
+  var activos = listaPersonal(true).filter(function(x){ return !ac[x.id]; });
+  var propios = activos.filter(function(x){ return esDeSucursal(x, S.suc); });
+  var reemp = activos.filter(function(x){ return !esDeSucursal(x, S.suc) && x.reemplazos; });
   var sel = '';
-  if(ed && disp.length){
+  if(ed && (propios.length || reemp.length)){
     sel = '<select onchange="if(this.value)agregarACargo(this.value)"><option value="">＋ Agregar…</option>' +
       Object.keys(PUESTOS).map(function(pu){
-        var g = disp.filter(function(x){ return x.puesto === pu; });
-        return g.length ? '<optgroup label="' + PUESTOS[pu] + 's">' + g.map(function(x){ return '<option value="' + x.id + '">' + esc(x.nombre) + '</option>'; }).join('') + '</optgroup>' : '';
-      }).join('') + '</select>';
+        var g = propios.filter(function(x){ return x.puesto === pu; });
+        return g.length ? '<optgroup label="' + PUESTOS[pu] + 's">' + g.map(function(x){ return '<option value="' + x.id + '">' + esc(x.nombre) + (x.turno ? ' · ' + TURNOS[x.turno] : '') + '</option>'; }).join('') + '</optgroup>' : '';
+      }).join('') +
+      (reemp.length ? '<optgroup label="🔁 Reemplazos (otras sucursales)">' + reemp.map(function(x){ return '<option value="' + x.id + '">' + esc(x.nombre) + ' · ' + esc(nombreSuc(x.sucursalId)) + '</option>'; }).join('') + '</optgroup>' : '') +
+      '</select>';
   }
   var vacio = !chips && !sel ? '<span class="nota">' + (esAdmin() && !valores(S.personal).length ? 'Cargá el personal en <a href="#" onclick="mostrarTab(\'personal\');return false">Personal</a> para elegir quién está a cargo.' : 'Sin cargar.') + '</span>' : '';
   el.innerHTML = '<span class="et">👩‍💼 A cargo hoy:</span>' + chips + sel + vacio;
 }
+function guardarACargo(id, valor, alFallar){
+  var u = {}; u['cajas/' + S.suc + '/' + S.fecha + '/aCargo/' + id] = valor;
+  DB.update(u).catch(function(err){ alFallar(); pintarACargo(); if($('diaForm')) pintarFormulario(); errorCarga(err); });
+}
 function agregarACargo(id){
   var p = S.personal[id]; if(!p) return;
-  var u = {}; u['cajas/' + S.suc + '/' + S.fecha + '/aCargo/' + id] = p.nombre;
-  D.caja.aCargo = D.caja.aCargo || {}; D.caja.aCargo[id] = p.nombre; pintarACargo();
-  DB.update(u).catch(function(err){ delete D.caja.aCargo[id]; pintarACargo(); errorCarga(err); });
+  var reemplazo = !esDeSucursal(p, S.suc);
+  var v = { nombre:p.nombre, turno:p.turno || '', reemplazo:reemplazo, desde:reemplazo ? p.sucursalId : '' };
+  D.caja.aCargo = D.caja.aCargo || {}; D.caja.aCargo[id] = v;
+  pintarACargo(); if($('diaForm')) pintarFormulario();
+  guardarACargo(id, v, function(){ delete D.caja.aCargo[id]; });
+}
+function cambiarTurnoACargo(id, turno){
+  var ant = datoACargo(D.caja.aCargo[id]), v = Object.assign({}, ant, { turno:turno });
+  D.caja.aCargo[id] = v;
+  guardarACargo(id, v, function(){ D.caja.aCargo[id] = ant; });
 }
 function quitarACargo(id){
-  var ant = D.caja.aCargo[id], u = {}; u['cajas/' + S.suc + '/' + S.fecha + '/aCargo/' + id] = null;
-  delete D.caja.aCargo[id]; pintarACargo();
-  DB.update(u).catch(function(err){ D.caja.aCargo[id] = ant; pintarACargo(); errorCarga(err); });
+  var ant = D.caja.aCargo[id];
+  delete D.caja.aCargo[id]; pintarACargo(); if($('diaForm')) pintarFormulario();
+  guardarACargo(id, null, function(){ D.caja.aCargo[id] = ant; });
 }
+// Responsable de cada carga: se elige entre quienes están a cargo ese día
+function opcionesResponsable(){ var ac = D.caja.aCargo || {}; return Object.keys(ac).map(function(k){ return { id:k, nombre:datoACargo(ac[k]).nombre }; }); }
+function responsableActual(){
+  var l = opcionesResponsable(), ids = l.map(function(x){ return x.id; });
+  if(F.responsable && ids.indexOf(F.responsable) >= 0) return F.responsable;
+  var g = ''; try { g = localStorage.getItem('bs_resp_' + S.suc) || ''; } catch(e){}
+  if(g && ids.indexOf(g) >= 0) return g;
+  return l.length === 1 ? l[0].id : '';
+}
+function elegirResponsable(id){ F.responsable = id; try { localStorage.setItem('bs_resp_' + S.suc, id); } catch(e){} }
+function datosResponsable(){
+  var id = responsableActual(); if(!id) return null;
+  return { id:id, nombre:datoACargo((D.caja.aCargo || {})[id]).nombre };
+}
+function selectorResponsable(){
+  var l = opcionesResponsable(), actual = responsableActual();
+  if(!l.length) return '<div class="nota">Elegí arriba quién está <b>a cargo hoy</b> para registrar quién hace cada carga.</div>';
+  return '<select id="fResp" onchange="elegirResponsable(this.value)"' + (actual ? '' : ' class="falta"') + '><option value="">— Elegí —</option>' +
+    l.map(function(x){ return '<option value="' + x.id + '"' + (x.id === actual ? ' selected' : '') + '>' + esc(x.nombre) + '</option>'; }).join('') + '</select>';
+}
+
 // Quién supervisó las fichas ese día
 function selectorSupervisora(ed){
   var sup = D.caja.supervisor || null;
