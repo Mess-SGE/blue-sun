@@ -4,7 +4,7 @@
    - Firebase, Google Fonts y cualquier otro dominio: no se tocan (los datos siempre van en vivo).
    Al publicar cambios hay que subir el número de CACHE: el SW nuevo queda esperando
    y la app muestra «Hay una versión nueva — Actualizar» (no recarga sola en medio del uso). */
-var CACHE = 'bluesun-v4';
+var CACHE = 'bluesun-v5';
 var ARCHIVOS = ['./', 'index.html', 'manifest.json', 'logo-blanco.png', 'logo-rosa.png', 'mess-logo.svg', 'icono.png',
   'icono-192.png', 'icono-512.png', 'icono-maskable-512.png', 'apple-touch-icon.png'];
 

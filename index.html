@@ -90,15 +90,17 @@ a{color:var(--azul2)}
 /* al pasar a Blue Sun: la capa se retira hacia atrás (achica + desenfoca) mientras aparece el rosa */
 #introMess.fin .im-ct{opacity:0;transform:scale(.9);filter:blur(8px);transition:opacity .45s ease,transform .55s cubic-bezier(.4,0,.2,1),filter .45s ease}
 .intro-saltar{transition:transform 100ms ease-out,background .15s}.intro-saltar:active{transform:scale(.95)}
+/* el botón se ve chico, pero el dedo tiene 44px para acertarle */
+.intro-saltar::after{content:'';position:absolute;inset:-8px -6px}
 #introMess img{width:clamp(120px,22vw,200px);height:auto}
-#introMess .im-nombre{margin-top:18px;font-family:ui-serif,'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;font-weight:600;font-size:clamp(1.7rem,4.4vw,2.4rem);letter-spacing:-.3px;line-height:1.1;background:linear-gradient(90deg,#22D3EE,#7C5CFF 55%,#C084FC);-webkit-background-clip:text;background-clip:text;color:transparent}
+#introMess .im-nombre{margin-top:18px;font-family:ui-serif,'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;font-weight:600;font-size:clamp(1.7rem,4.4vw,2.4rem);letter-spacing:-.02em;line-height:1.1;background:linear-gradient(90deg,#22D3EE,#7C5CFF 55%,#C084FC);-webkit-background-clip:text;background-clip:text;color:transparent}
 #introMess .im-linea{width:0;height:1px;margin-top:14px;background:linear-gradient(90deg,transparent,rgba(124,92,255,.6),transparent);transition:width 1.2s cubic-bezier(.4,0,.2,1) .3s}
 #introMess.ver .im-linea{width:160px}
-#introMess .im-sub{margin-top:10px;font-size:.78rem;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#6f6c8a}
+#introMess .im-sub{margin-top:10px;font-size:.78rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9a97b5}
 #introMess .intro-saltar{background:rgba(255,255,255,.1)}
 /* mientras se ve MESS, la de Blue Sun espera quieta (sus animaciones arrancan recién después) */
 #intro.en-espera,#intro.en-espera *{animation-play-state:paused!important}
-@media (prefers-reduced-motion:reduce){ #introMess .im-ct,#introMess .im-linea,#introMess.fin .im-ct{transition:opacity .4s ease;transform:none!important;filter:none!important} }
+@media (prefers-reduced-motion:reduce){ #intro{transition:opacity .4s ease} #intro.fin{transform:none} #introMess .im-ct,#introMess .im-linea,#introMess.fin .im-ct{transition:opacity .4s ease;transform:none!important;filter:none!important} }
 /* ===== Modo oscuro ===== */
 @media (prefers-color-scheme:dark){ :root:not([data-tema="claro"]){
   --bg:#141013; --superficie:#1E181B; --card:#1E181B; --borde:#3A3035; --texto:#F4EEF0; --muted:#AA9CA2;
@@ -472,6 +474,16 @@ function armarIntro(){
   var reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){ em.classList.add('ver'); }); });
   _messT = setTimeout(pasarABlueSun, reducido ? 1800 : 3300);
+  document.addEventListener('keydown', teclaIntro, true);
+}
+// con teclado: Esc salta todo; Enter o Espacio hacen lo mismo que tocar la pantalla.
+// Mientras la presentación tapa la app, ninguna tecla llega al formulario de ingreso.
+function teclaIntro(e){
+  if(!$('intro') && !$('introMess')){ document.removeEventListener('keydown', teclaIntro, true); return; }
+  if(e.key === 'Escape') cerrarIntro();
+  else if(e.key === 'Enter' || e.key === ' '){ if($('introMess') && !$('introMess').classList.contains('fin')) pasarABlueSun(); else cerrarIntro(); }
+  else return;
+  e.preventDefault(); e.stopPropagation();
 }
 function pasarABlueSun(){
   var em = $('introMess'), el = $('intro');
@@ -490,6 +502,7 @@ function cerrarIntro(){
   if(em){ em.classList.add('fin'); setTimeout(function(){ if(em.parentNode) em.parentNode.removeChild(em); }, 520); }
   var el = $('intro'); if(!el || el.classList.contains('fin')) return;
   el.classList.add('fin');
+  document.removeEventListener('keydown', teclaIntro, true);
   setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 650);
 }
 armarIntro();
