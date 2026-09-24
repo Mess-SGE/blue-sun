@@ -20,6 +20,7 @@
       "equipos":    { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
       "servicios":  { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
       "config":     { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
+      "personal":   { ".write": "auth != null && root.child('bluesun/roles/' + auth.uid + '/rol').val() === 'admin'" },
 
       "clientes": {
         "$id": {

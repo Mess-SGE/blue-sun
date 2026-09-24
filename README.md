@@ -12,6 +12,7 @@ Sistema web para manejar los locales de **Blue Sun**: planilla del día, cliente
 | 🎟️ **Abonos** | Abonos vigentes, por vencer, vencidos y agotados. El admin puede extenderlos o corregirlos, y cada cambio queda registrado. |
 | 📊 **Resumen del mes** | Equivale a la hoja BASE del Excel: totales día por día, sesiones por equipo y ventas por servicio. Se puede ver una sucursal o todas juntas, y descargar en CSV. |
 | 💲 **Precios y equipos** | Precio en **efectivo** y precio con **tarjeta** para cada servicio (la transferencia se cobra como tarjeta), duración de los abonos y tipo de ficha de cada equipo. |
+| 👩‍💼 **Personal** | Encargadas, recepcionistas y supervisoras. En la planilla se elige quién está a cargo cada día y quién supervisó las fichas. |
 | ⚙️ **Configuración** | Sucursales, usuarios, opciones de abonos, importación de clientes de la planilla y copia de seguridad. |
 
 ## Cómo probarlo ya (modo demo)
@@ -43,3 +44,9 @@ Abrí `index.html` en el navegador. Mientras no esté configurado Firebase, la a
 | **Administrador** | Todo: todas las sucursales, borrar movimientos, precios, usuarios. |
 | **Recepción** | Anotar en la planilla de **su** sucursal, cargar clientes, gastos y retiros. No puede borrar ni ver el resumen del mes. |
 | **Sólo lectura** | Ver, sin modificar nada. |
+
+## Instalar la app en el celular o la computadora
+
+- **Android / Chrome / Edge:** abrí el sistema y tocá **«📲 Instalar app»** al pie del menú (o el ícono de instalar en la barra de direcciones). Queda con el ícono de la estrella, en pantalla completa.
+- **iPhone / iPad:** abrilo en **Safari** → botón **Compartir** → **«Agregar a inicio»**.
+- Cuando se publica una versión nueva, la app muestra **«🔄 Hay una versión nueva — Actualizar»**.

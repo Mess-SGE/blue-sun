@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EA235C">
 <link rel="icon" type="image/png" href="icono.png">
-<link rel="apple-touch-icon" href="icono.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Blue Sun">
 <title>Blue Sun · Gestión</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -185,6 +190,16 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 tfoot td{font-weight:600;border-top:2px solid var(--borde);background:var(--hover)}
 .vacio{padding:26px;text-align:center;color:var(--muted)}
 .acc-fila{white-space:nowrap;text-align:right}
+.a-cargo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--linea)}
+.a-cargo .et{font-size:13px;color:var(--muted);font-weight:500}
+.persona{display:inline-flex;align-items:center;gap:6px;background:var(--azul-claro);color:var(--marca-texto);border-radius:20px;padding:5px 6px 5px 12px;font-size:13px;font-weight:600}
+.persona small{font-weight:500;opacity:.75}
+.persona button{border:none;background:transparent;color:inherit;cursor:pointer;width:22px;height:22px;border-radius:50%;font-size:13px}
+.persona button:hover{background:rgba(234,35,92,.15)}
+.a-cargo select{width:auto;padding:6px 10px;font-size:13px;border-radius:20px}
+.b-encargada{background:var(--azul-claro);color:var(--marca-texto)}
+.b-recepcionista{background:var(--ok-claro);color:var(--ok)}
+.b-supervisora{background:var(--warn-claro);color:var(--warn)}
 .flecha{background:var(--superficie);border:1px solid var(--borde);color:var(--marca-texto);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:12px;margin-right:4px;vertical-align:middle;transition:transform var(--rapido) ease-out,background .15s}
 .flecha:hover{background:var(--azul-claro)}
 .flecha:active{transform:scale(.9)}
@@ -259,6 +274,9 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
 #toast.ver{opacity:1;transform:translate(-50%,0)}
 #toast.err{background:#DC2626}
 #toast.ok{background:#15803D}
+#bannerVersion{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));z-index:90;background:#111827;color:#fff;border-radius:14px;padding:9px 10px 9px 16px;font-size:14px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+#bannerVersion button{background:var(--azul);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-weight:600;cursor:pointer}
+.sb-pie #btnInstalar{background:#fff;color:var(--azul);font-weight:600;margin-right:6px}
 
 /* ===== Responsive ===== */
 @media (max-width:980px){
@@ -346,6 +364,7 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
         <button data-t="claro" onclick="elegirTema('claro')" title="Claro">☀️</button>
         <button data-t="oscuro" onclick="elegirTema('oscuro')" title="Oscuro">🌙</button>
       </div>
+      <button id="btnInstalar" class="oculto" onclick="instalarApp()">📲 Instalar app</button>
       <button onclick="salir()">Salir</button>
     </div>
   </aside>
@@ -364,6 +383,7 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
       <section id="tab-abonos" class="tab"></section>
       <section id="tab-resumen" class="tab"></section>
       <section id="tab-precios" class="tab"></section>
+      <section id="tab-personal" class="tab"></section>
       <section id="tab-config" class="tab"></section>
     </div>
   </main>
@@ -371,6 +391,7 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
 
 <div id="modal" onclick="if(event.target===this)cerrarModal()"><div class="modal-box" id="modalBox"></div></div>
 <div id="toast"></div>
+<div id="bannerVersion" class="oculto">🔄 Hay una versión nueva <button onclick="actualizarApp()">Actualizar</button></div>
 
 <!-- ===== INICIO SCRIPT PRINCIPAL ===== -->
 <script>
@@ -587,7 +608,7 @@ function armarSemilla(){
    ========================================================= */
 var S = {
   uid:'', email:'', rol:'', sucUsuario:'', suc:'',
-  sucursales:{}, equipos:{}, servicios:{}, clientes:{}, abonos:{}, config:{},
+  sucursales:{}, equipos:{}, servicios:{}, clientes:{}, abonos:{}, config:{}, personal:{},
   tab:'inicio', fecha:hoy()
 };
 function esAdmin(){ return S.rol === 'admin'; }
@@ -600,9 +621,9 @@ function nombreEquipo(id){ return S.equipos[id] ? S.equipos[id].nombre : '—'; 
 function precioDe(serv, forma){ if(!serv) return 0; return forma === 'efectivo' ? (serv.precioEfectivo || 0) : (serv.precioTarjeta || 0); } // transferencia = precio tarjeta
 
 function cargarCatalogos(){
-  return Promise.all(['sucursales','equipos','servicios','clientes','abonos','config'].map(function(k){ return DB.get(k); }))
+  return Promise.all(['sucursales','equipos','servicios','clientes','abonos','config','personal'].map(function(k){ return DB.get(k); }))
     .then(function(r){
-      S.sucursales = conIds(r[0]); S.equipos = conIds(r[1]); S.servicios = conIds(r[2]);
+      S.sucursales = conIds(r[0]); S.equipos = conIds(r[1]); S.servicios = conIds(r[2]); S.personal = conIds(r[6]);
       S.clientes = conIds(r[3]); S.abonos = conIds(r[4]); S.config = r[5] || {};
       if(!Object.keys(S.equipos).length && esAdmin()){
         return DB.update(armarSemilla()).then(function(){ toast('Se cargaron los equipos y precios iniciales', 'ok'); return cargarCatalogos(); });
@@ -708,6 +729,7 @@ var TABS = {
   abonos:   { ico:'🎟️', titulo:'Abonos',            visible:function(){ return true; },            render:function(){ renderAbonos(); } },
   resumen:  { ico:'📊', titulo:'Resumen del mes',   visible:function(){ return S.rol !== 'recepcion'; }, render:function(){ renderResumen(); } },
   precios:  { ico:'💲', titulo:'Precios y equipos', visible:function(){ return esAdmin(); },       render:function(){ renderPrecios(); } },
+  personal: { ico:'👩‍💼', titulo:'Personal',          visible:function(){ return esAdmin(); },       render:function(){ renderPersonal(); } },
   config:   { ico:'⚙️', titulo:'Configuración',     visible:function(){ return esAdmin(); },       render:function(){ renderConfig(); } }
 };
 var ALL_TABS = Object.keys(TABS);
@@ -865,7 +887,8 @@ function renderInicio(){
       '<div class="card" style="background:linear-gradient(120deg,#B8113F,#EA235C 60%,#F2527F);color:#fff;border:none">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
         '<div><div style="opacity:.8;font-size:14px">' + esc(fmtLargo(f)) + '</div>' +
-        '<div style="font-size:24px;font-weight:600;margin-top:2px">¡Hola! ✨ Blue Sun ' + esc(nombreSuc(S.suc)) + '</div></div>' +
+        '<div style="font-size:24px;font-weight:600;margin-top:2px">¡Hola! ✨ Blue Sun ' + esc(nombreSuc(S.suc)) + '</div>' +
+        (nombresACargo(caja).length ? '<div style="opacity:.9;font-size:14px;margin-top:4px">👩‍💼 A cargo hoy: <b>' + esc(nombresACargo(caja).join(', ')) + '</b></div>' : '') + '</div>' +
         (puedeCargar() ? '<button class="btn btn-sol" onclick="S.fecha=hoy();mostrarTab(\'dia\')">＋ Anotar una sesión</button>' : '') +
       '</div></div>' +
       '<div class="grid g4" style="margin-bottom:18px">' +
@@ -958,10 +981,11 @@ function pintarDia(){
       '<button class="btn btn-sec btn-chico" onclick="moverDia(1)">▶</button>' +
       (S.fecha !== hoy() ? '<button class="btn btn-sec btn-chico" onclick="S.fecha=hoy();renderDia()">Hoy</button>' : '') +
       '<span style="margin-left:auto;font-weight:600">' + esc(fmtLargo(S.fecha)) + '</span>' +
-    '</div></div>' +
+    '</div><div id="diaACargo" class="a-cargo"></div></div>' +
     (soloLectura ? '' : '<div class="card" id="diaForm"></div>') +
     '<div class="card"><h3>Movimientos del día <span class="acciones" id="diaTotalesMini"></span></h3><div id="diaMovs"></div></div>' +
     '<div class="grid g2"><div class="card" id="diaCaja"></div><div class="card" id="diaFichas"></div></div>';
+  pintarACargo();
   if(!soloLectura) pintarFormulario();
   pintarMovs(); pintarCaja(); pintarFichas();
 }
@@ -1250,7 +1274,7 @@ function pintarFichas(){
       return '<tr><td style="white-space:nowrap"><span class="ficha ' + col + '"></span>' + (col === 'gris' ? 'Grises' : 'Doradas') + '</td><td class="num">' + inp(col, 'inicio', x.inicio) + '</td><td class="num">' + inp(col, 'repuestas', x.repuestas) + '</td><td class="num">' + x.usadas + '</td><td class="num"><b>' + x.cierre + '</b></td></tr>';
     }).join('') + '</tbody></table></div>' +
     '<div class="nota" style="margin:8px 0 14px">«Usadas» se calcula solo con las sesiones anotadas. El inicio se toma del cierre del día anterior (se puede corregir).</div>' +
-    '<b style="font-size:14px">Control de supervisión</b><div class="tabla-wrap"><table><thead><tr><th>Equipo</th><th class="num">Según planilla</th><th class="num">Sacadas</th><th class="num">Diferencia</th></tr></thead><tbody>';
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px">Control de supervisión</b>' + selectorSupervisora(ed) + '</div><div class="tabla-wrap"><table><thead><tr><th>Equipo</th><th class="num">Según planilla</th><th class="num">Sacadas</th><th class="num">Diferencia</th></tr></thead><tbody>';
   listaEquipos(true).forEach(function(e){
     var us = f.porEquipo[e.id] || 0, c = ctrl[e.id] || {}, tiene = c.sacadas != null && c.sacadas !== '';
     var dif = tiene ? Number(c.sacadas) - us : null;
@@ -1442,7 +1466,7 @@ function renderResumen(){
     var dias = {}, todos = [];
     rs.forEach(function(r){
       Object.keys(r[0]).forEach(function(d){ var l = valores(r[0][d]); dias[d] = dias[d] || { movs:[], gastos:0, retiros:0 }; dias[d].movs = dias[d].movs.concat(l); todos = todos.concat(l); });
-      Object.keys(r[1]).forEach(function(d){ dias[d] = dias[d] || { movs:[], gastos:0, retiros:0 }; dias[d].gastos += sumaItems(r[1][d].gastos); dias[d].retiros += sumaItems(r[1][d].retiros); });
+      Object.keys(r[1]).forEach(function(d){ dias[d] = dias[d] || { movs:[], gastos:0, retiros:0 }; dias[d].gastos += sumaItems(r[1][d].gastos); dias[d].retiros += sumaItems(r[1][d].retiros); dias[d].aCargo = (dias[d].aCargo || []).concat(nombresACargo(r[1][d])); });
     });
     pintarResumen(dias, todos);
   }).catch(errorCarga);
@@ -1452,7 +1476,7 @@ function pintarResumen(dias, todos){
   var tot = totalesMovs(todos), acum = 0, gT = 0, rT = 0;
   _rsFilas = Object.keys(dias).sort().map(function(d){
     var t = totalesMovs(dias[d].movs); acum += t.total; gT += dias[d].gastos; rT += dias[d].retiros;
-    return { fecha:d, sesiones:t.sesiones, efectivo:t.efectivo, tarjeta:t.tarjeta, transferencia:t.transferencia, gastos:dias[d].gastos, retiros:dias[d].retiros, total:t.total, acumulado:acum };
+    return { fecha:d, aCargo:(dias[d].aCargo || []).join(', '), sesiones:t.sesiones, efectivo:t.efectivo, tarjeta:t.tarjeta, transferencia:t.transferencia, gastos:dias[d].gastos, retiros:dias[d].retiros, total:t.total, acumulado:acum };
   });
   var porServ = {};
   todos.forEach(function(m){ if(m.forma === 'abono') return; var k = m.servicioNombre; porServ[k] = porServ[k] || { n:0, imp:0 }; porServ[k].n++; porServ[k].imp += Number(m.importe) || 0; });
@@ -1465,9 +1489,9 @@ function pintarResumen(dias, todos){
       kpi('Abonos vendidos', tot.abonosVendidos, 'en el mes', 'sol') +
       kpi('Gastos + retiros', $$(gT + rT), 'Gastos ' + $$(gT) + ' · Retiros ' + $$(rT)) +
     '</div>' +
-    '<div class="card"><h3>Día por día</h3>' + (_rsFilas.length ? '<div class="tabla-wrap"><table><thead><tr><th>Día</th><th class="num">Sesiones</th><th class="num">Efectivo</th><th class="num">Tarjeta</th><th class="num">Transf.</th><th class="num">Gastos</th><th class="num">Retiros</th><th class="num">Total día</th><th class="num">Acumulado</th></tr></thead><tbody>' +
-      _rsFilas.map(function(f){ return '<tr><td><a href="#" onclick="irADia(\'' + f.fecha + '\');return false">' + fmtFCorta(f.fecha) + '</a></td><td class="num">' + f.sesiones + '</td><td class="num">' + $$(f.efectivo) + '</td><td class="num">' + $$(f.tarjeta) + '</td><td class="num">' + $$(f.transferencia) + '</td><td class="num">' + $$(f.gastos) + '</td><td class="num">' + $$(f.retiros) + '</td><td class="num"><b>' + $$(f.total) + '</b></td><td class="num">' + $$(f.acumulado) + '</td></tr>'; }).join('') +
-      '</tbody><tfoot><tr><td>Totales</td><td class="num">' + tot.sesiones + '</td><td class="num">' + $$(tot.efectivo) + '</td><td class="num">' + $$(tot.tarjeta) + '</td><td class="num">' + $$(tot.transferencia) + '</td><td class="num">' + $$(gT) + '</td><td class="num">' + $$(rT) + '</td><td class="num">' + $$(tot.total) + '</td><td></td></tr></tfoot></table></div>' : '<div class="vacio">No hay movimientos en este mes.</div>') + '</div>' +
+    '<div class="card"><h3>Día por día</h3>' + (_rsFilas.length ? '<div class="tabla-wrap"><table><thead><tr><th>Día</th><th>A cargo</th><th class="num">Sesiones</th><th class="num">Efectivo</th><th class="num">Tarjeta</th><th class="num">Transf.</th><th class="num">Gastos</th><th class="num">Retiros</th><th class="num">Total día</th><th class="num">Acumulado</th></tr></thead><tbody>' +
+      _rsFilas.map(function(f){ return '<tr><td><a href="#" onclick="irADia(\'' + f.fecha + '\');return false">' + fmtFCorta(f.fecha) + '</a></td><td class="nota">' + esc(f.aCargo || '—') + '</td><td class="num">' + f.sesiones + '</td><td class="num">' + $$(f.efectivo) + '</td><td class="num">' + $$(f.tarjeta) + '</td><td class="num">' + $$(f.transferencia) + '</td><td class="num">' + $$(f.gastos) + '</td><td class="num">' + $$(f.retiros) + '</td><td class="num"><b>' + $$(f.total) + '</b></td><td class="num">' + $$(f.acumulado) + '</td></tr>'; }).join('') +
+      '</tbody><tfoot><tr><td>Totales</td><td></td><td class="num">' + tot.sesiones + '</td><td class="num">' + $$(tot.efectivo) + '</td><td class="num">' + $$(tot.tarjeta) + '</td><td class="num">' + $$(tot.transferencia) + '</td><td class="num">' + $$(gT) + '</td><td class="num">' + $$(rT) + '</td><td class="num">' + $$(tot.total) + '</td><td></td></tr></tfoot></table></div>' : '<div class="vacio">No hay movimientos en este mes.</div>') + '</div>' +
     '<div class="grid g2"><div class="card"><h3>Sesiones por equipo</h3><div class="barras-eq">' +
       listaEquipos().map(function(e){ var n = tot.porEquipo[e.id] || 0; return '<div class="fila"><span><span class="ficha ' + e.ficha + '"></span>' + esc(e.nombre) + '</span><div class="barra' + (e.ficha === 'gris' ? '' : ' sol') + '"><i style="width:' + (n / maxEq * 100) + '%"></i></div><b style="text-align:right">' + n + '</b></div>'; }).join('') +
       '</div><div class="nota" style="margin-top:8px"><span class="ficha gris"></span>Grises: ' + tot.fichas.gris + ' · <span class="ficha dorada"></span>Doradas: ' + tot.fichas.dorada + '</div></div>' +
@@ -1476,7 +1500,7 @@ function pintarResumen(dias, todos){
 function irADia(f){ if(_rsSuc && _rsSuc !== '*' && S.rol !== 'recepcion'){ S.suc = _rsSuc; $('selSucursal').value = _rsSuc; } S.fecha = f; mostrarTab('dia'); }
 function exportarResumen(){
   if(!_rsFilas.length){ toast('No hay datos para exportar'); return; }
-  var cols = ['fecha','sesiones','efectivo','tarjeta','transferencia','gastos','retiros','total','acumulado'];
+  var cols = ['fecha','aCargo','sesiones','efectivo','tarjeta','transferencia','gastos','retiros','total','acumulado'];
   var csv = '﻿' + cols.join(';') + '\n' + _rsFilas.map(function(f){ return cols.map(function(c){ return c === 'fecha' ? fmtF(f[c]) : f[c]; }).join(';'); }).join('\n');
   var a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
@@ -1525,7 +1549,7 @@ function moverOrden(col, id, dir, grupo){
   var tmp = lista[i]; lista[i] = lista[j]; lista[j] = tmp;
   aplicarOrden(col, lista, id, true);
 }
-function listaOrdenable(col, grupo){ return col === 'servicios' ? listaServiciosTipo(grupo) : col === 'equipos' ? listaEquipos() : listaSucursales(); }
+function listaOrdenable(col, grupo){ return col === 'servicios' ? listaServiciosTipo(grupo) : col === 'equipos' ? listaEquipos() : col === 'personal' ? listaPersonal() : listaSucursales(); }
 function aplicarOrden(col, lista, id, animar){
   var antes = {}, u = {};
   lista.forEach(function(x, k){ antes[x.id] = S[col][x.id].orden; S[col][x.id].orden = k + 1; u[col + '/' + x.id + '/orden'] = k + 1; });
@@ -1676,6 +1700,113 @@ function editarEquipo(id){
 }
 
 /* =========================================================
+   14b. PERSONAL (encargadas, recepcionistas, supervisoras)
+   Ficha de cada persona; después se elige quién está a cargo en cada día de la planilla
+   (cajas/<suc>/<fecha>/aCargo/<id> = nombre) y quién supervisó las fichas (…/supervisor).
+   Se guarda también el NOMBRE para que el historial se lea aunque la ficha cambie o se borre.
+   ========================================================= */
+var PUESTOS = { encargada:'Encargada', recepcionista:'Recepcionista', supervisora:'Supervisora' };
+function listaPersonal(soloActivos, sucId){
+  return ordenarPor(valores(S.personal).filter(function(x){
+    return (!soloActivos || x.activo !== false) && (!sucId || !x.sucursalId || x.sucursalId === sucId);
+  }), function(x){ return ('00000' + (x.orden || 999)).slice(-5) + norm(x.nombre); });
+}
+function nombresACargo(caja){ var a = caja && caja.aCargo || {}; return Object.keys(a).map(function(k){ return a[k]; }).filter(Boolean); }
+function renderPersonal(){
+  var l = listaPersonal();
+  $('tab-personal').innerHTML = '<div class="card"><h3>👩‍💼 Personal<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarPersona(\'\')">＋ Agregar persona</button></span></h3>' +
+    '<p class="nota" style="margin-top:0">Encargadas, recepcionistas y supervisoras. En la Planilla del día se elige quién está a cargo, y en el control de fichas quién supervisó.</p>' +
+    (l.length ? '<div class="tabla-wrap"><table><thead><tr><th></th><th>Nombre</th><th>Puesto</th><th>Sucursal</th><th>Teléfono</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      l.map(function(x, i){
+        return '<tr data-id="' + x.id + '" style="' + (x.activo === false ? 'opacity:.45' : '') + '">' + asa('personal') +
+          '<td><b>' + esc(x.nombre) + '</b>' + (x.notas ? '<br><span class="nota">' + esc(x.notas) + '</span>' : '') + '</td>' +
+          '<td><span class="badge b-' + esc(x.puesto) + '">' + esc(PUESTOS[x.puesto] || x.puesto) + '</span></td>' +
+          '<td>' + (x.sucursalId ? esc(nombreSuc(x.sucursalId)) : '<span class="nota">Todas</span>') + '</td>' +
+          '<td>' + esc(x.telefono || '') + ' ' + botonWhatsapp(x.telefono) + '</td>' +
+          '<td>' + (x.activo === false ? '<span class="badge b-gris">Inactiva</span>' : '<span class="badge b-ok">Activa</span>') + '</td>' +
+          '<td class="acc-fila">' + flechasOrden('personal', x.id, i, l.length) + '<button class="btn btn-sec btn-chico" onclick="editarPersona(\'' + x.id + '\')">✏️</button></td></tr>';
+      }).join('') + '</tbody></table></div>'
+    : '<div class="vacio">Todavía no hay nadie cargado. Tocá «＋ Agregar persona».</div>') + '</div>';
+}
+function editarPersona(id){
+  var x = id ? S.personal[id] : { puesto:'encargada', activo:true, sucursalId:S.suc };
+  abrirModal(id ? 'Editar ' + x.nombre : 'Nueva persona',
+    '<div class="form-fila">' +
+    '<div class="c12 campo"><label>Nombre y apellido *</label><input id="epNombre" value="' + esc(x.nombre || '') + '"></div>' +
+    '<div class="c6 campo"><label>Puesto</label><select id="epPuesto">' + Object.keys(PUESTOS).map(function(k){ return '<option value="' + k + '"' + (x.puesto === k ? ' selected' : '') + '>' + PUESTOS[k] + '</option>'; }).join('') + '</select></div>' +
+    '<div class="c6 campo"><label>Sucursal</label><select id="epSuc"><option value="">Todas</option>' + listaSucursales().map(function(su){ return '<option value="' + esc(su.id) + '"' + (x.sucursalId === su.id ? ' selected' : '') + '>' + esc(su.nombre) + '</option>'; }).join('') + '</select></div>' +
+    '<div class="c6 campo"><label>Teléfono / WhatsApp</label><input id="epTel" inputmode="tel" value="' + esc(x.telefono || '') + '"></div>' +
+    '<div class="c6 campo"><label>DNI</label><input id="epDni" inputmode="numeric" value="' + esc(x.dni || '') + '"></div>' +
+    '<div class="c12 campo"><label>Notas (horario, turno…)</label><input id="epNotas" value="' + esc(x.notas || '') + '"></div>' +
+    '<div class="c12"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="epActivo" ' + (x.activo !== false ? 'checked' : '') + '> Activa (aparece para elegir en la planilla)</label></div></div>',
+    (id ? '<button class="btn btn-err" onclick="borrarPersona(\'' + id + '\')">Borrar</button>' : '') +
+    '<button class="btn btn-sec" onclick="cerrarModal()">Cancelar</button><button class="btn btn-pri" id="epGuardar">Guardar</button>');
+  $('epGuardar').onclick = function(){
+    var nombre = $('epNombre').value.trim().replace(/\s+/g, ' ');
+    if(!nombre){ toast('Falta el nombre', 'err'); return; }
+    var nid = id || DB.key();
+    var d = { nombre:nombre, puesto:$('epPuesto').value, sucursalId:$('epSuc').value, telefono:$('epTel').value.trim(), dni:$('epDni').value.trim(),
+              notas:$('epNotas').value.trim(), activo:$('epActivo').checked, orden:x.orden || 999 };
+    var u = {}; u['personal/' + nid] = d;
+    DB.update(u).then(function(){ S.personal[nid] = Object.assign({ id:nid }, d); cerrarModal(); toast('Guardado ✔', 'ok'); renderPersonal(); }).catch(errorCarga);
+  };
+  setTimeout(function(){ $('epNombre').focus(); }, 50);
+}
+function borrarPersona(id){
+  var x = S.personal[id];
+  if(!confirm('¿Borrar a ' + x.nombre + '? En los días ya cargados sigue figurando su nombre. Si solo dejó de trabajar, mejor desmarcá «Activa».')) return;
+  var u = {}; u['personal/' + id] = null;
+  DB.update(u).then(function(){ delete S.personal[id]; cerrarModal(); toast('Borrada', 'ok'); renderPersonal(); }).catch(errorCarga);
+}
+// «A cargo hoy» en la planilla del día
+function pintarACargo(){
+  var el = $('diaACargo'); if(!el) return;
+  var ac = D.caja.aCargo || {}, ed = puedeCargar();
+  var chips = Object.keys(ac).map(function(k){
+    var p = S.personal[k];
+    return '<span class="persona">' + esc(ac[k]) + (p ? ' <small>' + esc(PUESTOS[p.puesto] || '') + '</small>' : '') +
+      (ed ? '<button title="Quitar" onclick="quitarACargo(\'' + k + '\')">✕</button>' : '') + '</span>';
+  }).join('');
+  var disp = listaPersonal(true, S.suc).filter(function(x){ return !ac[x.id]; });
+  var sel = '';
+  if(ed && disp.length){
+    sel = '<select onchange="if(this.value)agregarACargo(this.value)"><option value="">＋ Agregar…</option>' +
+      Object.keys(PUESTOS).map(function(pu){
+        var g = disp.filter(function(x){ return x.puesto === pu; });
+        return g.length ? '<optgroup label="' + PUESTOS[pu] + 's">' + g.map(function(x){ return '<option value="' + x.id + '">' + esc(x.nombre) + '</option>'; }).join('') + '</optgroup>' : '';
+      }).join('') + '</select>';
+  }
+  var vacio = !chips && !sel ? '<span class="nota">' + (esAdmin() && !valores(S.personal).length ? 'Cargá el personal en <a href="#" onclick="mostrarTab(\'personal\');return false">Personal</a> para elegir quién está a cargo.' : 'Sin cargar.') + '</span>' : '';
+  el.innerHTML = '<span class="et">👩‍💼 A cargo hoy:</span>' + chips + sel + vacio;
+}
+function agregarACargo(id){
+  var p = S.personal[id]; if(!p) return;
+  var u = {}; u['cajas/' + S.suc + '/' + S.fecha + '/aCargo/' + id] = p.nombre;
+  D.caja.aCargo = D.caja.aCargo || {}; D.caja.aCargo[id] = p.nombre; pintarACargo();
+  DB.update(u).catch(function(err){ delete D.caja.aCargo[id]; pintarACargo(); errorCarga(err); });
+}
+function quitarACargo(id){
+  var ant = D.caja.aCargo[id], u = {}; u['cajas/' + S.suc + '/' + S.fecha + '/aCargo/' + id] = null;
+  delete D.caja.aCargo[id]; pintarACargo();
+  DB.update(u).catch(function(err){ D.caja.aCargo[id] = ant; pintarACargo(); errorCarga(err); });
+}
+// Quién supervisó las fichas ese día
+function selectorSupervisora(ed){
+  var sup = D.caja.supervisor || null;
+  var l = listaPersonal(true, S.suc).filter(function(x){ return x.puesto === 'supervisora'; });
+  if(!ed) return sup ? '<span class="nota">Supervisó: <b>' + esc(sup.nombre) + '</b></span>' : '';
+  if(!l.length && !sup) return '<span class="nota">Supervisó: (cargá supervisoras en Personal)</span>';
+  if(sup && !l.some(function(x){ return x.id === sup.id; })) l.push({ id:sup.id, nombre:sup.nombre });
+  return '<label class="nota" style="display:flex;align-items:center;gap:6px">Supervisó: <select style="width:auto;padding:5px 8px;font-size:13px" onchange="guardarSupervisora(this.value)"><option value="">—</option>' +
+    l.map(function(x){ return '<option value="' + x.id + '"' + (sup && sup.id === x.id ? ' selected' : '') + '>' + esc(x.nombre) + '</option>'; }).join('') + '</select></label>';
+}
+function guardarSupervisora(id){
+  var p = S.personal[id], v = id ? { id:id, nombre:p ? p.nombre : (D.caja.supervisor || {}).nombre } : null;
+  var u = {}; u['cajas/' + S.suc + '/' + S.fecha + '/supervisor'] = v;
+  DB.update(u).then(function(){ D.caja.supervisor = v; toast('Guardado ✔', 'ok'); }).catch(errorCarga);
+}
+
+/* =========================================================
    15. CONFIGURACIÓN (sólo admin)
    ========================================================= */
 function renderConfig(){
@@ -1762,6 +1893,36 @@ function descargarBackup(){
     a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 1)], { type:'application/json' }));
     a.download = 'bluesun_backup_' + hoy() + '.json'; a.click();
   }).catch(errorCarga);
+}
+
+/* =========================================================
+   APP INSTALABLE (PWA)
+   - Chrome/Edge/Android: aparece «📲 Instalar app» en el pie del menú.
+   - iPhone: Safari → Compartir → «Agregar a inicio» (Apple no deja mostrar un botón propio).
+   - Versión nueva publicada: banner «Actualizar» (no recarga sola en medio del uso).
+   ========================================================= */
+var _promptInstalar = null;
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); _promptInstalar = e; var b = $('btnInstalar'); if(b) b.classList.remove('oculto'); });
+window.addEventListener('appinstalled', function(){ _promptInstalar = null; var b = $('btnInstalar'); if(b) b.classList.add('oculto'); toast('¡Listo! Blue Sun quedó instalada ✔', 'ok'); });
+function instalarApp(){
+  if(!_promptInstalar) return;
+  _promptInstalar.prompt();
+  _promptInstalar.userChoice.then(function(){ _promptInstalar = null; $('btnInstalar').classList.add('oculto'); });
+}
+var _swEsperando = null;
+function avisarVersion(sw){ _swEsperando = sw; $('bannerVersion').classList.remove('oculto'); }
+function actualizarApp(){ if(_swEsperando) _swEsperando.postMessage('actualizar'); else location.reload(); }
+if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  navigator.serviceWorker.register('sw.js').then(function(reg){
+    if(reg.waiting && navigator.serviceWorker.controller) avisarVersion(reg.waiting);
+    reg.addEventListener('updatefound', function(){
+      var nuevo = reg.installing;
+      nuevo.addEventListener('statechange', function(){ if(nuevo.state === 'installed' && navigator.serviceWorker.controller) avisarVersion(nuevo); });
+    });
+    setInterval(function(){ reg.update(); }, 30 * 60 * 1000); // revisa cada media hora si hay versión nueva
+  }).catch(function(err){ console.warn('SW:', err); });
+  var _recargando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){ if(_recargando) return; _recargando = true; location.reload(); });
 }
 
 /* =========================================================

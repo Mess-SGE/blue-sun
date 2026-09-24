@@ -38,6 +38,10 @@ Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se l
 
 - **Ordenar filas** (Precios: sesiones/abonos/productos, Equipos; Configuración: Sucursales): flechas ▲▼ (`flechasOrden`/`moverOrden`) y manija ⠿ para arrastrar (`asa()`, listeners globales `pointerdown/move/up` con estado `ARR`). Los dos terminan en `aplicarOrden(col, listaOrdenada, id)`, que renumera `orden` 1..n de todo el grupo en un solo `DB.update` y repinta al instante (si la escritura falla, deshace). Las listas se ordenan por `orden` numérico con desempate por nombre (`listaServiciosTipo`, `listaEquipos`, `listaSucursales`), y el selector de servicios de la planilla usa ese mismo orden. Una fila nueva entra con `orden` 99/999, o sea al final.
 
+## App instalable (PWA)
+
+`manifest.json` (scope `./`, íconos `icono-192/512`, `icono-maskable-512` con zona segura, `apple-touch-icon.png`) + `sw.js`. El SW hace **network-first para `index.html`** (siempre la última versión; sin conexión, la copia) y cache-first para archivos propios; **no toca otros dominios** (Firebase, Google Fonts, gstatic): los datos van siempre en vivo. **Al publicar cambios subir `CACHE` en `sw.js`** (`bluesun-v1` → `v2`…): el SW nuevo queda esperando y la app muestra el banner «🔄 Hay una versión nueva — Actualizar» (`avisarVersion`/`actualizarApp`); no hace `skipWaiting` solo para no recargar en medio de una carga. Botón «📲 Instalar app» en el pie del menú cuando el navegador dispara `beforeinstallprompt` (Chrome/Edge/Android); en iPhone se instala desde Safari → Compartir → Agregar a inicio.
+
 ## Modelo de datos (`bluesun/…`)
 
 | Ruta | Contenido |
@@ -49,9 +53,10 @@ Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se l
 | `abonos/<id>` | `clienteId, servicioId, nombre, equipoId, sesiones, usadas, fechaVenta, vence ('' = no vence), sucursalId, multiLocal, precio, forma, movId, ajustes/<id>` |
 | `movimientos/<suc>/<YYYY-MM-DD>/<id>` | Una fila de la planilla: `hora, clienteId, clienteNombre, servicioId, servicioNombre, tipo, equipoId, sesion (bool: consume ficha), forma ('efectivo'|'tarjeta'|'transferencia'|'abono'), importe, abonoId (sesión que descuenta de un abono), abonoCreadoId (venta de abono), nota, usuario` |
 | `historial/<clienteId>/<movId>` | Copia liviana del movimiento, para la ficha del cliente (se escribe en el mismo `update`). |
-| `cajas/<suc>/<YYYY-MM-DD>` | `inicial, gastos/<id>{desc,importe}, retiros/<id>{quien→desc,importe}, observaciones, fichas/{gris,dorada}/{inicio,repuestas}, control/<equipoId>/sacadas, resumen{…}` |
+| `cajas/<suc>/<YYYY-MM-DD>` | `inicial, gastos/<id>{desc,importe}, retiros/<id>{quien→desc,importe}, observaciones, fichas/{gris,dorada}/{inicio,repuestas}, control/<equipoId>/sacadas, aCargo/<personalId>=nombre, supervisor{id,nombre}, resumen{…}`. Se guarda el **nombre** además del id para que el historial se lea aunque la ficha cambie o se borre. |
 | `roles/<uid>` | `rol ('admin'|'recepcion'|'lector'), sucursal, email` |
 | `solicitudes/<uid>` | Cuentas que ingresaron y todavía no tienen rol. |
+| `personal/<id>` | `nombre, puesto ('encargada'|'recepcionista'|'supervisora'), sucursalId ('' = todas), telefono, dni, notas, activo, orden`. Sólo admin escribe. |
 | `config/general` | `abonoMultiLocalDefault, diasAvisoVencimiento` |
 
 ### Reglas de negocio a respetar
