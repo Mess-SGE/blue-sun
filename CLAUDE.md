@@ -11,7 +11,7 @@ Contexto técnico para asistentes de IA. Documentación para personas: `README.m
 - **Un solo `index.html`** con HTML, CSS y JS juntos. **Sin framework ni paso de build.** El JS es mayormente ES5 (`var`, `function`), con strings entre comillas simples y comentarios en español.
 - **Firebase compat SDK 10.x** (Auth email/password + Realtime Database). El nodo raíz es `bluesun`.
 - **Modo demo**: si `FIREBASE_CONFIG.apiKey` está vacío, `DB` usa `crearDBLocal()` (localStorage `bluesun_demo`) con la **misma interfaz** que `crearDBFirebase()`: `get`, `update` (multi-ruta, `null` borra), `range` (por clave), `ultimoHasta`, `incr` (transacción) y `key`. Toda lectura y escritura pasa por `DB`: nunca llamar a `firebase.database()` directo.
-- Hosting en **GitHub Pages**.
+- Hosting en **GitHub Pages** en la organización **Mess-SGE**: https://mess-sge.github.io/blue-sun/ (repo `Mess-SGE/blue-sun`; antes estaba en la cuenta personal y esa dirección ya no existe). Si se cambia la dirección, agregar el dominio nuevo en Firebase → Authentication → Dominios autorizados.
 - Validar el JS con `node --check` antes de entregar. Para eso, extraer el script que está entre `<!-- ===== INICIO SCRIPT PRINCIPAL ===== -->` y `<!-- ===== FIN SCRIPT PRINCIPAL ===== -->`.
 
 ## Marca
