@@ -81,6 +81,24 @@ a{color:var(--azul2)}
   @keyframes introFundido{from{opacity:0}to{opacity:1}}
 }
 
+
+/* ===== Presentación paso 0: MESS (la marca del sistema, igual que en el sistema RK) ===== */
+#introMess{position:fixed;inset:0;z-index:210;background:#0A0D14;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .55s cubic-bezier(.4,0,.2,1)}
+#introMess.fin{opacity:0;pointer-events:none}
+#introMess .im-ct{display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(10px) scale(.97);transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1),filter .5s ease;will-change:transform,opacity}
+#introMess.ver .im-ct{opacity:1;transform:none}
+/* al pasar a Blue Sun: la capa se retira hacia atrás (achica + desenfoca) mientras aparece el rosa */
+#introMess.fin .im-ct{opacity:0;transform:scale(.9);filter:blur(8px);transition:opacity .45s ease,transform .55s cubic-bezier(.4,0,.2,1),filter .45s ease}
+.intro-saltar{transition:transform 100ms ease-out,background .15s}.intro-saltar:active{transform:scale(.95)}
+#introMess img{width:clamp(120px,22vw,200px);height:auto}
+#introMess .im-nombre{margin-top:18px;font-family:ui-serif,'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,serif;font-weight:600;font-size:clamp(1.7rem,4.4vw,2.4rem);letter-spacing:-.3px;line-height:1.1;background:linear-gradient(90deg,#22D3EE,#7C5CFF 55%,#C084FC);-webkit-background-clip:text;background-clip:text;color:transparent}
+#introMess .im-linea{width:0;height:1px;margin-top:14px;background:linear-gradient(90deg,transparent,rgba(124,92,255,.6),transparent);transition:width 1.2s cubic-bezier(.4,0,.2,1) .3s}
+#introMess.ver .im-linea{width:160px}
+#introMess .im-sub{margin-top:10px;font-size:.78rem;font-weight:600;letter-spacing:2.4px;text-transform:uppercase;color:#6f6c8a}
+#introMess .intro-saltar{background:rgba(255,255,255,.1)}
+/* mientras se ve MESS, la de Blue Sun espera quieta (sus animaciones arrancan recién después) */
+#intro.en-espera,#intro.en-espera *{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){ #introMess .im-ct,#introMess .im-linea,#introMess.fin .im-ct{transition:opacity .4s ease;transform:none!important;filter:none!important} }
 /* ===== Modo oscuro ===== */
 @media (prefers-color-scheme:dark){ :root:not([data-tema="claro"]){
   --bg:#141013; --superficie:#1E181B; --card:#1E181B; --borde:#3A3035; --texto:#F4EEF0; --muted:#AA9CA2;
@@ -317,7 +335,11 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
 <body>
 
 <!-- ===== Presentación de entrada ===== -->
-<div id="intro" aria-hidden="true" onclick="cerrarIntro()">
+<div id="introMess" aria-hidden="true" onclick="pasarABlueSun()">
+  <button class="intro-saltar" onclick="cerrarIntro();event.stopPropagation()">Saltar</button>
+  <div class="im-ct"><img src="mess-logo.svg" alt="Mess"><div class="im-nombre">Mess</div><div class="im-linea"></div><div class="im-sub">Sistema de Gestión</div></div>
+</div>
+<div id="intro" class="en-espera" aria-hidden="true" onclick="cerrarIntro()">
   <button class="intro-saltar" onclick="cerrarIntro();event.stopPropagation()">Saltar</button>
   <div class="intro-sistema">
     <small>Sistema de gestión</small>
@@ -437,21 +459,36 @@ aplicarTema(temaGuardado());
    Primero el sistema (palabras), después el logo en 3D: varias capas del logo
    separadas en profundidad (translateZ) forman el volumen, y el conjunto gira hasta
    quedar de frente. Se ve una vez por sesión del navegador; tocar la salta. */
-var _introT;
+var _introT, _messT;
 function armarIntro(){
-  var el = $('intro');
+  var el = $('intro'), em = $('introMess');
   var visto = false; try { visto = sessionStorage.getItem('bs_intro') === '1'; } catch(e){}
-  if(visto){ el.parentNode.removeChild(el); return; }
+  if(visto){ el.parentNode.removeChild(el); if(em) em.parentNode.removeChild(em); return; }
   try { sessionStorage.setItem('bs_intro', '1'); } catch(e){}
   var capas = '', n = 22;
   for(var i = n; i >= 1; i--) capas += '<img class="capa" src="logo-rosa.png" alt="" style="transform:translateZ(' + (-i * 1.5) + 'px)">';
   $('introLogo').innerHTML = capas + '<img src="logo-blanco.png" alt="Blue Sun"><div class="intro-brillo"></div>';
+  // Paso 0: MESS (unos 3,5 s); después arranca la presentación de Blue Sun
+  var reducido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ em.classList.add('ver'); }); });
+  _messT = setTimeout(pasarABlueSun, reducido ? 1800 : 3300);
+}
+function pasarABlueSun(){
+  var em = $('introMess'), el = $('intro');
+  if(!em || em.classList.contains('fin')) return;
+  clearTimeout(_messT);
+  em.classList.add('fin');
+  setTimeout(function(){ if(em.parentNode) em.parentNode.removeChild(em); }, 520);
+  if(!el) return;
+  el.classList.remove('en-espera');          // las animaciones de Blue Sun arrancan desde cero ahora
   var dura = matchMedia('(prefers-reduced-motion: reduce)').matches ? 2200 : 8600;
   _introT = setTimeout(cerrarIntro, dura);
 }
 function cerrarIntro(){
+  clearTimeout(_messT); clearTimeout(_introT);
+  var em = $('introMess');
+  if(em){ em.classList.add('fin'); setTimeout(function(){ if(em.parentNode) em.parentNode.removeChild(em); }, 520); }
   var el = $('intro'); if(!el || el.classList.contains('fin')) return;
-  clearTimeout(_introT);
   el.classList.add('fin');
   setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 650);
 }
@@ -1978,7 +2015,8 @@ function instalarApp(){
 }
 var _swEsperando = null;
 function avisarVersion(sw){ _swEsperando = sw; $('bannerVersion').classList.remove('oculto'); }
-function actualizarApp(){ if(_swEsperando) _swEsperando.postMessage('actualizar'); else location.reload(); }
+var _pidioActualizar = false;
+function actualizarApp(){ _pidioActualizar = true; if(_swEsperando) _swEsperando.postMessage('actualizar'); else location.reload(); }
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   navigator.serviceWorker.register('sw.js').then(function(reg){
     if(reg.waiting && navigator.serviceWorker.controller) avisarVersion(reg.waiting);
@@ -1989,7 +2027,8 @@ if('serviceWorker' in navigator && (location.protocol === 'https:' || location.h
     setInterval(function(){ reg.update(); }, 30 * 60 * 1000); // revisa cada media hora si hay versión nueva
   }).catch(function(err){ console.warn('SW:', err); });
   var _recargando = false;
-  navigator.serviceWorker.addEventListener('controllerchange', function(){ if(_recargando) return; _recargando = true; location.reload(); });
+  // sólo se recarga si la persona tocó «Actualizar» (la primera activación del SW no debe recargar la página)
+  navigator.serviceWorker.addEventListener('controllerchange', function(){ if(_recargando || !_pidioActualizar) return; _recargando = true; location.reload(); });
 }
 
 /* =========================================================
