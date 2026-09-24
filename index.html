@@ -300,6 +300,125 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
 #bannerVersion button{background:var(--azul);color:#fff;border:none;border-radius:10px;padding:7px 12px;font-weight:600;cursor:pointer}
 .sb-pie #btnInstalar{background:#fff;color:var(--azul);font-weight:600;margin-right:6px}
 
+
+/* ===== Capa estética =====
+   Va después de los estilos base y antes de «Responsive», así los ajustes de celular siguen mandando.
+   Idea: menos bordes, más aire, sombras suaves y un solo acento rosa bien usado. */
+:root{
+  --bg:#F7F3F5; --borde:#ECE3E7; --linea:#F3ECEF; --campo:#FBF8F9; --muted:#6E6670;
+  --radio:18px;
+  --sombra:0 1px 2px rgba(92,24,48,.04),0 10px 28px -16px rgba(92,24,48,.18);
+  --acento-grad:linear-gradient(180deg,#F23E70,#E01F56);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-tema="claro"]){ --bg:#120E11; --borde:#2E2429; --linea:#261E22; --campo:#1A1418; --muted:#A8989F;
+  --sombra:0 1px 2px rgba(0,0,0,.4),0 12px 30px -18px rgba(0,0,0,.7) } }
+:root[data-tema="oscuro"]{ --bg:#120E11; --borde:#2E2429; --linea:#261E22; --campo:#1A1418; --muted:#A8989F;
+  --sombra:0 1px 2px rgba(0,0,0,.4),0 12px 30px -18px rgba(0,0,0,.7) }
+
+/* menú lateral: rosa con profundidad (luz arriba a la izquierda), íconos de línea */
+#sidebar{background:radial-gradient(120% 55% at 0% 0%,rgba(255,255,255,.20),transparent 60%),linear-gradient(188deg,#EF3469 0%,#D91A51 48%,#A10D39 100%);box-shadow:inset -1px 0 0 rgba(255,255,255,.08)}
+.sb-marca{padding:26px 24px 18px}
+.sb-marca img{max-width:176px}
+.sb-suc{margin:0 14px 14px}
+.sb-suc label{font-size:10.5px;letter-spacing:.14em;opacity:.65;font-weight:500;padding-left:4px}
+.sb-suc select{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 12px;font-weight:500}
+.sb-suc select:hover{border-color:rgba(255,255,255,.35)}
+.sb-suc select:focus{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.6);box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+#nav{padding:4px 12px}
+.nav-btn{gap:12px;padding:10px 12px;border-radius:12px;font-size:14.5px;font-weight:500;color:rgba(255,255,255,.78);margin-bottom:3px}
+.nav-btn:hover{background:rgba(255,255,255,.10);color:#fff}
+.nav-btn.activo{background:rgba(255,255,255,.97);color:#C8144A;font-weight:600;box-shadow:0 6px 18px -8px rgba(80,0,24,.55)}
+.nav-btn .ico{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.nav-btn .ico svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sb-pie{padding:16px;border-top:1px solid rgba(255,255,255,.12)}
+.sb-user{display:flex;align-items:center;gap:10px;min-width:0}
+.sb-avatar{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.18);font-weight:600;font-size:14px;text-transform:uppercase;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.sb-user > div{min-width:0}
+#sbUsuario{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.sb-pie .rol{background:rgba(255,255,255,.95);color:#C8144A;font-size:10px;letter-spacing:.08em;padding:1px 8px;margin-top:3px}
+.tema-sel{margin-top:14px;background:rgba(0,0,0,.14);border-radius:12px;padding:3px}
+.sb-pie .tema-sel button{margin-top:0;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;padding:6px 0;font-size:12.5px;font-weight:500;background:transparent}
+.tema-sel button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sb-pie .tema-sel button.on{background:#fff;color:#C8144A;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.sb-pie > button{border-radius:10px;padding:7px 14px;font-size:13px;font-weight:500}
+.sb-pie > button:hover{background:rgba(255,255,255,.2)}
+/* en oscuro el menú deja el rosa pleno: ciruela profundo con el rosa como acento */
+@media (prefers-color-scheme:dark){ :root:not([data-tema="claro"]) #sidebar{background:radial-gradient(120% 50% at 0% 0%,rgba(234,35,92,.22),transparent 60%),linear-gradient(188deg,#23121B,#170C12);box-shadow:inset -1px 0 0 rgba(255,255,255,.06)}
+  :root:not([data-tema="claro"]) .nav-btn.activo{background:rgba(234,35,92,.18);color:#FF8DB0;box-shadow:inset 0 0 0 1px rgba(255,111,152,.28)} }
+:root[data-tema="oscuro"] #sidebar{background:radial-gradient(120% 50% at 0% 0%,rgba(234,35,92,.22),transparent 60%),linear-gradient(188deg,#23121B,#170C12);box-shadow:inset -1px 0 0 rgba(255,255,255,.06)}
+:root[data-tema="oscuro"] .nav-btn.activo{background:rgba(234,35,92,.18);color:#FF8DB0;box-shadow:inset 0 0 0 1px rgba(255,111,152,.28)}
+
+/* encabezado */
+.topbar{padding:20px 32px 16px}
+.topbar h2{font-size:26px;font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.topbar .sub{font-size:13px;margin-top:2px}
+.contenido{padding:8px 32px 72px}
+#bannerDemo{padding:9px 32px}
+
+/* tarjetas */
+.card{border:1px solid var(--borde);border-radius:var(--radio);padding:22px 24px;box-shadow:var(--sombra);margin-bottom:20px}
+.card h3{font-size:15.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:16px}
+.grid{gap:20px}
+.hero{position:relative;overflow:hidden;border:none!important;color:#fff;padding:26px 28px;
+  background:radial-gradient(60% 120% at 100% 0%,rgba(255,255,255,.28),transparent 60%),linear-gradient(120deg,#A80E3B,#E0205A 55%,#F4527F)!important;
+  box-shadow:0 18px 40px -20px rgba(200,20,74,.7)}
+.hero::after{content:'';position:absolute;right:-60px;bottom:-90px;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.22),rgba(255,255,255,0) 70%);pointer-events:none}
+.hero > *{position:relative;z-index:1}
+.hero .hero-fecha{opacity:.82;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.hero .hero-titulo{font-size:28px;font-weight:600;letter-spacing:-.025em;line-height:1.15;margin-top:4px}
+
+/* indicadores: número protagonista, etiqueta chica, un trazo de acento */
+.kpi{padding:18px 20px 16px;border:1px solid var(--borde)}
+.kpi::after{display:none}
+.kpi .et{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.kpi .et::before{content:'';width:7px;height:7px;border-radius:50%;flex:none;background:var(--azul);box-shadow:0 0 0 3px var(--azul-claro)}
+.kpi.sol .et::before{background:#E9B949;box-shadow:0 0 0 3px rgba(233,185,73,.2)}
+.kpi .val{font-size:30px;font-weight:600;margin-top:8px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi .det{font-size:12.5px;margin-top:6px}
+
+/* formularios */
+input,select,textarea{background:var(--campo);border-radius:12px;padding:11px 13px;transition:border-color .15s,box-shadow .15s,background-color .15s}
+input:focus,select:focus,textarea:focus{background:var(--superficie);box-shadow:0 0 0 4px rgba(234,35,92,.14)}
+.campo label{font-size:12.5px;font-weight:500}
+.mini-input{padding:7px 9px}
+
+/* botones */
+.btn{border-radius:12px;padding:10px 18px}
+.btn-pri{background:var(--acento-grad);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 18px -10px rgba(224,31,86,.8)}
+.btn-pri:hover{filter:brightness(1.06)}
+.btn-sol{border:none;box-shadow:0 1px 2px rgba(0,0,0,.08),0 8px 20px -10px rgba(0,0,0,.35)}
+.btn-sec:hover{border-color:var(--azul2)}
+.btn-chico{border-radius:10px;padding:7px 12px}
+.seg{border-radius:13px;padding:4px}
+.seg button{border-radius:10px;padding:8px 15px}
+.seg button.on{box-shadow:0 1px 2px rgba(0,0,0,.06),0 4px 10px -4px rgba(92,24,48,.22)}
+
+/* tablas: encabezado liviano, filas con aire */
+th{font-size:11px;letter-spacing:.08em;padding:10px}
+td{padding:11px 10px}
+tfoot td{background:transparent;border-top:1px solid var(--borde)}
+.badge{padding:3px 10px;font-size:11.5px}
+.barra{height:6px;background:var(--gris-suave)}
+.barra > i{border-radius:6px}
+
+/* modal y avisos */
+.modal-box{border-radius:22px;box-shadow:0 30px 70px -20px rgba(20,4,12,.45),0 0 0 1px rgba(0,0,0,.04)}
+.modal-cab{padding:20px 24px;border-bottom:1px solid var(--linea)}
+.modal-cab h3{letter-spacing:-.015em}
+.modal-cuerpo{padding:20px 24px}
+.modal-pie{padding:16px 24px;border-top:1px solid var(--linea)}
+#toast{background:rgba(24,16,20,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:14px;padding:12px 18px;font-weight:500;box-shadow:0 14px 34px -12px rgba(0,0,0,.45)}
+#toast.ok{background:rgba(21,128,61,.94)}
+#toast.err{background:rgba(220,38,38,.94)}
+.aviso{border-radius:12px}
+
+/* ingreso: el mismo rosa, con luz y una tarjeta que flota */
+#login,#pendiente{background:radial-gradient(50% 40% at 85% 8%,rgba(255,255,255,.30),transparent 70%),radial-gradient(45% 45% at 5% 100%,rgba(120,0,40,.45),transparent 70%),linear-gradient(160deg,#F2527F 0%,#E4215A 55%,#A80E3B 100%)}
+.login-card{border-radius:26px;padding:40px 34px 32px;box-shadow:0 40px 80px -30px rgba(80,0,28,.65),0 0 0 1px rgba(255,255,255,.4)}
+.login-card p{margin-bottom:26px}
+.login-card .btn-pri{padding:12px 18px;margin-top:4px}
+
 /* ===== Responsive ===== */
 @media (max-width:980px){
   .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -311,11 +430,17 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
   main{margin-left:0}
   #btnMenu{display:block}
   .topbar{padding:12px 16px}
-  .contenido{padding:16px 16px 60px}
+  .topbar h2{font-size:21px}
+  .contenido{padding:8px 16px 60px}
+  .hero{padding:22px 20px}
+  .hero .hero-titulo{font-size:23px}
   .g2,.g3{grid-template-columns:1fr}
   .c8,.c6,.c4,.c3{grid-column:span 12}
   .kpi .val{font-size:22px}
-  .card{padding:16px}
+  .card{padding:18px 16px}
+  .kpi .val{font-size:24px}
+  .kpi{padding:16px}
+  .kpi .et{font-size:10.5px;letter-spacing:.05em}
   #bannerDemo{padding:8px 16px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -383,12 +508,11 @@ tr.recien-movida td{background:var(--azul-claro)!important;transition:background
     </div>
     <nav id="nav"></nav>
     <div class="sb-pie">
-      <div id="sbUsuario"></div>
-      <span class="rol" id="sbRol"></span><br>
+      <div class="sb-user"><div class="sb-avatar" id="sbAvatar" aria-hidden="true"></div><div><div id="sbUsuario"></div><span class="rol" id="sbRol"></span></div></div>
       <div class="tema-sel" id="temaSel" role="group" aria-label="Apariencia">
         <button data-t="auto" onclick="elegirTema('auto')" title="Como el dispositivo">Auto</button>
-        <button data-t="claro" onclick="elegirTema('claro')" title="Claro">☀️</button>
-        <button data-t="oscuro" onclick="elegirTema('oscuro')" title="Oscuro">🌙</button>
+        <button data-t="claro" onclick="elegirTema('claro')" title="Claro" aria-label="Claro"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <button data-t="oscuro" onclick="elegirTema('oscuro')" title="Oscuro" aria-label="Oscuro"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
       </div>
       <button id="btnInstalar" class="oculto" onclick="instalarApp()">📲 Instalar app</button>
       <button onclick="salir()">Salir</button>
@@ -743,6 +867,7 @@ function iniciarApp(){
   mostrarPantalla('app');
   engancharMenuMovil();
   $('sbUsuario').textContent = S.email;
+  $('sbAvatar').textContent = (S.email || '?').charAt(0);
   $('sbRol').textContent = { admin:'Administrador', recepcion:'Recepción', lector:'Sólo lectura' }[S.rol] || S.rol;
   cargarCatalogos().then(function(){
     elegirSucursalInicial();
@@ -785,10 +910,21 @@ var TABS = {
   config:   { ico:'⚙️', titulo:'Configuración',     visible:function(){ return esAdmin(); },       render:function(){ renderConfig(); } }
 };
 var ALL_TABS = Object.keys(TABS);
+// íconos de línea del menú (24×24, trazo); si una pantalla nueva no tiene, se usa su emoji
+var ICONOS_NAV = {
+  inicio:   '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
+  dia:      '<rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/>',
+  clientes: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.5 3.5 5.2"/>',
+  abonos:   '<path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M14 7v2.5M14 11v2M14 14.5V17"/>',
+  resumen:  '<path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/>',
+  precios:  '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',
+  personal: '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/>',
+  config:   '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'
+};
 
 function armarNav(){
   $('nav').innerHTML = ALL_TABS.filter(function(t){ return TABS[t].visible(); }).map(function(t){
-    return '<button class="nav-btn" id="nav-' + t + '" onclick="mostrarTab(\'' + t + '\')"><span class="ico">' + TABS[t].ico + '</span>' + TABS[t].titulo + '</button>';
+    return '<button class="nav-btn" id="nav-' + t + '" onclick="mostrarTab(\'' + t + '\')"><span class="ico">' + (ICONOS_NAV[t] ? '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICONOS_NAV[t] + '</svg>' : TABS[t].ico) + '</span>' + TABS[t].titulo + '</button>';
   }).join('');
 }
 function mostrarTab(t){
@@ -936,10 +1072,10 @@ function renderInicio(){
     var maxEq = Math.max.apply(null, [1].concat(listaEquipos().map(function(e){ return tot.porEquipo[e.id] || 0; })));
 
     cont.innerHTML =
-      '<div class="card" style="background:linear-gradient(120deg,#B8113F,#EA235C 60%,#F2527F);color:#fff;border:none">' +
+      '<div class="card hero">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">' +
-        '<div><div style="opacity:.8;font-size:14px">' + esc(fmtLargo(f)) + '</div>' +
-        '<div style="font-size:24px;font-weight:600;margin-top:2px">¡Hola! ✨ Blue Sun ' + esc(nombreSuc(S.suc)) + '</div>' +
+        '<div><div class="hero-fecha">' + esc(fmtLargo(f)) + '</div>' +
+        '<div class="hero-titulo">¡Hola! Blue Sun ' + esc(nombreSuc(S.suc)) + '</div>' +
         (nombresACargo(caja).length ? '<div style="opacity:.9;font-size:14px;margin-top:4px">👩‍💼 A cargo hoy: <b>' + esc(nombresACargo(caja).join(', ')) + '</b></div>' : '') + '</div>' +
         (puedeCargar() ? '<button class="btn btn-sol" onclick="S.fecha=hoy();mostrarTab(\'dia\')">＋ Anotar una sesión</button>' : '') +
       '</div></div>' +
