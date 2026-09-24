@@ -36,6 +36,8 @@ Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se l
 - Todos los tocables responden en el *pointer-down* (`:active` con escala .97, `touch-action: manipulation`).
 - Se respetan `prefers-reduced-motion` (el menú salta sin resorte y todo pasa a fundidos), `prefers-reduced-transparency` y `prefers-contrast: more`.
 
+- **Ordenar filas** (Precios: sesiones/abonos/productos, Equipos; Configuración: Sucursales): flechas ▲▼ (`flechasOrden`/`moverOrden`) y manija ⠿ para arrastrar (`asa()`, listeners globales `pointerdown/move/up` con estado `ARR`). Los dos terminan en `aplicarOrden(col, listaOrdenada, id)`, que renumera `orden` 1..n de todo el grupo en un solo `DB.update` y repinta al instante (si la escritura falla, deshace). Las listas se ordenan por `orden` numérico con desempate por nombre (`listaServiciosTipo`, `listaEquipos`, `listaSucursales`), y el selector de servicios de la planilla usa ese mismo orden. Una fila nueva entra con `orden` 99/999, o sea al final.
+
 ## Modelo de datos (`bluesun/…`)
 
 | Ruta | Contenido |

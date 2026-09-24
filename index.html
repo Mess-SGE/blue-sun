@@ -184,6 +184,18 @@ tr:hover td{background:var(--hover)}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 tfoot td{font-weight:600;border-top:2px solid var(--borde);background:var(--hover)}
 .vacio{padding:26px;text-align:center;color:var(--muted)}
+.acc-fila{white-space:nowrap;text-align:right}
+.flecha{background:var(--superficie);border:1px solid var(--borde);color:var(--marca-texto);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:12px;margin-right:4px;vertical-align:middle;transition:transform var(--rapido) ease-out,background .15s}
+.flecha:hover{background:var(--azul-claro)}
+.flecha:active{transform:scale(.9)}
+.flecha[disabled]{opacity:.25;cursor:default;background:transparent}
+td.asa{width:26px;padding:0 0 0 6px;cursor:grab;color:var(--muted);font-size:18px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none}
+td.asa:hover{color:var(--marca-texto)}
+tr.arrastrando{position:relative;z-index:5;cursor:grabbing;box-shadow:0 12px 28px rgba(0,0,0,.18);transform-origin:center}
+tr.arrastrando td{background:var(--superficie)!important}
+tr.arrastrando td.asa{cursor:grabbing;color:var(--marca-texto)}
+body.con-arrastre,body.con-arrastre *{cursor:grabbing!important;user-select:none!important}
+tr.recien-movida td{background:var(--azul-claro)!important;transition:background .8s ease}
 
 /* ===== Chips / badges ===== */
 .badge{display:inline-block;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
@@ -581,8 +593,8 @@ var S = {
 function esAdmin(){ return S.rol === 'admin'; }
 function puedeCargar(){ return S.rol === 'admin' || S.rol === 'recepcion'; }
 function cfg(){ return S.config.general || { abonoMultiLocalDefault:false, diasAvisoVencimiento:7 }; }
-function listaEquipos(soloActivos){ return ordenarPor(valores(S.equipos).filter(function(e){ return !soloActivos || e.activo !== false; }), function(e){ return e.orden || 99; }); }
-function listaSucursales(soloActivas){ return ordenarPor(valores(S.sucursales).filter(function(s){ return !soloActivas || s.activa !== false; }), function(s){ return (s.orden || 99) + s.nombre; }); }
+function listaEquipos(soloActivos){ return ordenarPor(valores(S.equipos).filter(function(e){ return !soloActivos || e.activo !== false; }), function(e){ return ('00000' + (e.orden || 999)).slice(-5) + norm(e.nombre); }); }
+function listaSucursales(soloActivas){ return ordenarPor(valores(S.sucursales).filter(function(s){ return !soloActivas || s.activa !== false; }), function(s){ return ('00000' + (s.orden || 999)).slice(-5) + norm(s.nombre); }); }
 function nombreSuc(id){ return S.sucursales[id] ? S.sucursales[id].nombre : (id || '—'); }
 function nombreEquipo(id){ return S.equipos[id] ? S.equipos[id].nombre : '—'; }
 function precioDe(serv, forma){ if(!serv) return 0; return forma === 'efectivo' ? (serv.precioEfectivo || 0) : (serv.precioTarjeta || 0); } // transferencia = precio tarjeta
@@ -963,7 +975,7 @@ function pintarFormulario(){
   var usandoAbono = !!F.abonoId;
   var servs = valores(S.servicios).filter(function(s){ return s.activo !== false; });
   function grupo(tipo, et){
-    var l = ordenarPor(servs.filter(function(s){ return s.tipo === tipo; }), function(s){ return s.orden || 99; });
+    var l = listaServiciosTipo(tipo).filter(function(s){ return s.activo !== false; });
     return l.length ? '<optgroup label="' + et + '">' + l.map(function(s){ return '<option value="' + esc(s.id) + '"' + (s.id === F.servicioId ? ' selected' : '') + '>' + esc(s.nombre) + '</option>'; }).join('') + '</optgroup>' : '';
   }
   var html = '<h3>＋ Anotar</h3><div class="form-fila">' +
@@ -1478,24 +1490,143 @@ function exportarResumen(){
 function renderPrecios(){
   var servs = valores(S.servicios);
   function tabla(tipo, titulo){
-    var l = ordenarPor(servs.filter(function(s){ return s.tipo === tipo; }), function(s){ return s.orden || 99; });
+    var l = listaServiciosTipo(tipo);
     return '<div class="card"><h3>' + titulo + '<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarServicio(\'\',\'' + tipo + '\')">＋ Agregar</button></span></h3>' +
-      (l.length ? '<div class="tabla-wrap"><table><thead><tr><th>Nombre</th>' + (tipo !== 'producto' ? '<th>Equipo</th>' : '') + (tipo === 'abono' ? '<th class="num">Sesiones</th><th class="num">Dura</th>' : '') +
+      (l.length ? '<div class="tabla-wrap"><table><thead><tr><th></th><th>Nombre</th>' + (tipo !== 'producto' ? '<th>Equipo</th>' : '') + (tipo === 'abono' ? '<th class="num">Sesiones</th><th class="num">Dura</th>' : '') +
       '<th class="num">💵 Efectivo</th><th class="num">💳 Tarjeta / Transf.</th><th></th></tr></thead><tbody>' +
-      l.map(function(s){
-        return '<tr style="' + (s.activo === false ? 'opacity:.45' : '') + '"><td><b>' + esc(s.nombre) + '</b>' + (s.aConfirmar ? ' <span class="badge b-warn">a confirmar</span>' : '') + (s.activo === false ? ' <span class="badge b-gris">inactivo</span>' : '') + '</td>' +
+      l.map(function(s, i){
+        return '<tr data-id="' + s.id + '" style="' + (s.activo === false ? 'opacity:.45' : '') + '">' + asa('servicios', tipo) + '<td><b>' + esc(s.nombre) + '</b>' + (s.aConfirmar ? ' <span class="badge b-warn">a confirmar</span>' : '') + (s.activo === false ? ' <span class="badge b-gris">inactivo</span>' : '') + '</td>' +
           (tipo !== 'producto' ? '<td>' + esc(nombreEquipo(s.equipoId)) + '</td>' : '') +
           (tipo === 'abono' ? '<td class="num">' + (s.sesiones || '') + '</td><td class="num">' + (s.dias ? s.dias + ' días' : '<span class="nota">sin definir</span>') + '</td>' : '') +
           '<td class="num">' + (s.precioEfectivo ? $$(s.precioEfectivo) : '<span class="nota">libre</span>') + '</td><td class="num">' + (s.precioTarjeta ? $$(s.precioTarjeta) : '<span class="nota">libre</span>') + '</td>' +
-          '<td><button class="btn btn-sec btn-chico" onclick="editarServicio(\'' + s.id + '\')">✏️</button></td></tr>';
+          '<td class="acc-fila">' + flechasOrden('servicios', s.id, i, l.length, tipo) + '<button class="btn btn-sec btn-chico" onclick="editarServicio(\'' + s.id + '\')">✏️</button></td></tr>';
       }).join('') + '</tbody></table></div>' : '<div class="vacio">Nada cargado.</div>') + '</div>';
   }
   $('tab-precios').innerHTML =
     '<div class="aviso info" style="margin:0 0 18px">La transferencia se cobra al precio de tarjeta. Los precios marcados <b>a confirmar</b> salieron de la planilla y hay que revisarlos.</div>' +
     tabla('sesion', '☀️ Sesiones') + tabla('abono', '🎟️ Abonos') + tabla('producto', '🧴 Productos') +
-    '<div class="card"><h3>🛏️ Equipos<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarEquipo(\'\')">＋ Agregar equipo</button></span></h3><div class="tabla-wrap"><table><thead><tr><th>Equipo</th><th>Fichas</th><th>Estado</th><th></th></tr></thead><tbody>' +
-      listaEquipos().map(function(e){ return '<tr><td><b>' + esc(e.nombre) + '</b></td><td><span class="ficha ' + e.ficha + '"></span>' + (e.ficha === 'gris' ? 'Gris' : 'Dorada') + '</td><td>' + (e.activo === false ? '<span class="badge b-gris">Inactivo</span>' : '<span class="badge b-ok">Activo</span>') + '</td><td><button class="btn btn-sec btn-chico" onclick="editarEquipo(\'' + e.id + '\')">✏️</button></td></tr>'; }).join('') +
+    '<div class="card"><h3>🛏️ Equipos<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarEquipo(\'\')">＋ Agregar equipo</button></span></h3><div class="tabla-wrap"><table><thead><tr><th></th><th>Equipo</th><th>Fichas</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      listaEquipos().map(function(e, i, arr){ return '<tr data-id="' + e.id + '">' + asa('equipos') + '<td><b>' + esc(e.nombre) + '</b></td><td><span class="ficha ' + e.ficha + '"></span>' + (e.ficha === 'gris' ? 'Gris' : 'Dorada') + '</td><td>' + (e.activo === false ? '<span class="badge b-gris">Inactivo</span>' : '<span class="badge b-ok">Activo</span>') + '</td><td class="acc-fila">' + flechasOrden('equipos', e.id, i, arr.length) + '<button class="btn btn-sec btn-chico" onclick="editarEquipo(\'' + e.id + '\')">✏️</button></td></tr>'; }).join('') +
     '</tbody></table></div></div>';
+}
+/* ---------- Ordenar filas (▲ ▼) ----------
+   El orden se guarda como 1, 2, 3… en el campo «orden» de cada ítem del grupo,
+   y es el que usan los listados y el selector de servicios de la planilla. */
+function listaServiciosTipo(tipo){ return ordenarPor(valores(S.servicios).filter(function(s){ return s.tipo === tipo; }), function(s){ return ('00000' + (s.orden || 999)).slice(-5) + norm(s.nombre); }); }
+function flechasOrden(col, id, i, total, grupo){
+  var g = ',\'' + (grupo || '') + '\'';
+  return '<button class="flecha" title="Subir" aria-label="Subir"' + (i === 0 ? ' disabled' : ' onclick="moverOrden(\'' + col + '\',\'' + id + '\',-1' + g + ')"') + '>▲</button>' +
+         '<button class="flecha" title="Bajar" aria-label="Bajar"' + (i === total - 1 ? ' disabled' : ' onclick="moverOrden(\'' + col + '\',\'' + id + '\',1' + g + ')"') + '>▼</button>';
+}
+function moverOrden(col, id, dir, grupo){
+  var lista = listaOrdenable(col, grupo);
+  var i = lista.map(function(x){ return x.id; }).indexOf(id), j = i + dir;
+  if(i < 0 || j < 0 || j >= lista.length) return;
+  var tmp = lista[i]; lista[i] = lista[j]; lista[j] = tmp;
+  aplicarOrden(col, lista, id, true);
+}
+function listaOrdenable(col, grupo){ return col === 'servicios' ? listaServiciosTipo(grupo) : col === 'equipos' ? listaEquipos() : listaSucursales(); }
+function aplicarOrden(col, lista, id, animar){
+  var antes = {}, u = {};
+  lista.forEach(function(x, k){ antes[x.id] = S[col][x.id].orden; S[col][x.id].orden = k + 1; u[col + '/' + x.id + '/orden'] = k + 1; });
+  // se ve al instante (sin esperar a la base); si falla, se deshace
+  if(animar) repintarConAnimacion(id); else { var y = window.scrollY; TABS[S.tab].render(); window.scrollTo(0, y); }
+  if(col === 'sucursales') elegirSucursalInicial();
+  DB.update(u).catch(function(err){
+    Object.keys(antes).forEach(function(k){ S[col][k].orden = antes[k]; });
+    repintarConAnimacion(id); errorCarga(err);
+  });
+}
+/* ---------- Arrastrar filas (manija ⠿) ----------
+   La fila sigue al puntero 1:1 respetando dónde se la agarró; las demás se corren
+   para hacerle lugar; hay un umbral de 4px antes de arrancar (así un toque no mueve nada);
+   cerca de los bordes de la pantalla la página se desplaza sola. */
+function asa(col, grupo){ return '<td class="asa" title="Arrastrar para ordenar" data-col="' + col + '" data-grupo="' + (grupo || '') + '">⠿</td>'; }
+var ARR = null;
+document.addEventListener('pointerdown', function(e){
+  var td = e.target.closest && e.target.closest('td.asa'); if(!td || e.button > 0) return;
+  var tr = td.parentNode, tbody = tr.parentNode;
+  e.preventDefault();
+  var filas = Array.prototype.slice.call(tbody.querySelectorAll('tr[data-id]'));
+  ARR = { col:td.getAttribute('data-col'), grupo:td.getAttribute('data-grupo'), tr:tr, filas:filas,
+          desde:filas.indexOf(tr), hasta:filas.indexOf(tr), y0:e.clientY, scroll0:window.scrollY, dy:0, activo:false, id:e.pointerId,
+          tops:filas.map(function(f){ return f.getBoundingClientRect().top + window.scrollY; }), alto:tr.getBoundingClientRect().height };
+  try { td.setPointerCapture(e.pointerId); } catch(err){}
+});
+document.addEventListener('pointermove', function(e){
+  if(!ARR || e.pointerId !== ARR.id) return;
+  ARR.ultimaY = e.clientY;
+  moverArrastre();
+});
+function moverArrastre(){
+  var a = ARR; if(!a) return;
+  var dy = (a.ultimaY - a.y0) + (window.scrollY - a.scroll0);
+  if(!a.activo){
+    if(Math.abs(dy) < 4) return;
+    a.activo = true; a.tr.classList.add('arrastrando'); document.body.classList.add('con-arrastre');
+    a.filas.forEach(function(f){ if(f !== a.tr) f.style.transition = 'transform .2s cubic-bezier(.2,.8,.2,1)'; });
+  }
+  // limitar a la tabla (con un poco de resistencia al pasarse)
+  var min = a.tops[0] - a.tops[a.desde], max = a.tops[a.tops.length - 1] - a.tops[a.desde];
+  if(dy < min) dy = min - rubberband(min - dy, 120); else if(dy > max) dy = max + rubberband(dy - max, 120);
+  a.dy = dy;
+  a.tr.style.transform = 'translateY(' + dy + 'px) scale(1.01)';
+  // a qué posición cae: el centro de la fila arrastrada contra el centro de las demás
+  var centro = a.tops[a.desde] + dy + a.alto / 2, hasta = 0;
+  a.filas.forEach(function(f, k){ if(k !== a.desde && centro > a.tops[k] + f.getBoundingClientRect().height / 2) hasta++; });
+  a.hasta = hasta;
+  a.filas.forEach(function(f, k){
+    if(k === a.desde) return;
+    var corre = (a.desde < hasta && k > a.desde && k <= hasta) ? -a.alto : (a.desde > hasta && k < a.desde && k >= hasta) ? a.alto : 0;
+    f.style.transform = corre ? 'translateY(' + corre + 'px)' : '';
+  });
+  // autodesplazamiento cerca de los bordes
+  clearTimeout(a.auto);
+  var borde = 70, v = a.ultimaY < borde ? -12 : a.ultimaY > window.innerHeight - borde ? 12 : 0;
+  if(v){ a.auto = setTimeout(function(){ window.scrollBy(0, v); moverArrastre(); }, 16); }
+}
+function terminarArrastre(e){
+  var a = ARR; if(!a || e.pointerId !== a.id) return;
+  ARR = null; clearTimeout(a.auto);
+  document.body.classList.remove('con-arrastre');
+  if(!a.activo) return;
+  // la fila termina de acomodarse en su lugar y recién ahí se guarda
+  var destino = a.tops[a.hasta] - a.tops[a.desde] + (a.hasta > a.desde ? 0 : 0);
+  if(a.hasta > a.desde) destino = a.tops[a.hasta] + (a.filas[a.hasta].getBoundingClientRect().height - a.alto) - a.tops[a.desde];
+  a.tr.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
+  a.tr.style.transform = 'translateY(' + destino + 'px)';
+  setTimeout(function(){
+    a.tr.classList.remove('arrastrando');
+    if(a.hasta === a.desde){ a.filas.forEach(function(f){ f.style.transform = ''; f.style.transition = ''; }); return; }
+    var lista = listaOrdenable(a.col, a.grupo), movida = lista.splice(a.desde, 1)[0];
+    lista.splice(a.hasta, 0, movida);
+    aplicarOrden(a.col, lista, movida.id, false);
+    var fila = $('tab-' + S.tab).querySelector('tr[data-id="' + movida.id + '"]');
+    if(fila){ fila.classList.add('recien-movida'); setTimeout(function(){ fila.classList.remove('recien-movida'); }, 900); }
+    vibrar(8);
+  }, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 230);
+}
+document.addEventListener('pointerup', terminarArrastre);
+document.addEventListener('pointercancel', terminarArrastre);
+
+// Repinta la pantalla y hace que las filas se deslicen de su lugar viejo al nuevo (técnica FLIP)
+function repintarConAnimacion(idMovido){
+  var cont = $('tab-' + S.tab), pos = {};
+  Array.prototype.forEach.call(cont.querySelectorAll('tr[data-id]'), function(tr){ pos[tr.getAttribute('data-id')] = tr.getBoundingClientRect().top; });
+  var y = window.scrollY;
+  TABS[S.tab].render();
+  window.scrollTo(0, y);
+  var fila = cont.querySelector('tr[data-id="' + idMovido + '"]');
+  if(fila){ fila.classList.add('recien-movida'); setTimeout(function(){ fila.classList.remove('recien-movida'); }, 900); }
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  Array.prototype.forEach.call(cont.querySelectorAll('tr[data-id]'), function(tr){
+    var k = tr.getAttribute('data-id'); if(pos[k] == null) return;
+    var d = pos[k] - tr.getBoundingClientRect().top; if(!d) return;
+    tr.style.transition = 'none'; tr.style.transform = 'translateY(' + d + 'px)';
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      tr.style.transition = 'transform .32s cubic-bezier(.2,.8,.2,1)'; tr.style.transform = '';
+    }); });
+  });
 }
 function editarServicio(id, tipo){
   var s = id ? S.servicios[id] : { tipo:tipo, activo:true };
@@ -1552,8 +1683,8 @@ function renderConfig(){
   var yaImportados = CLIENTES_PLANILLA.filter(function(x){ return existeCliente(x[0]); }).length;
   $('tab-config').innerHTML =
     '<div class="card"><h3>🏪 Sucursales<span class="acciones"><button class="btn btn-pri btn-chico" onclick="editarSucursal(\'\')">＋ Agregar sucursal</button></span></h3>' +
-      '<div class="tabla-wrap"><table><thead><tr><th>Nombre</th><th>Dirección</th><th>Estado</th><th></th></tr></thead><tbody>' +
-      listaSucursales().map(function(s){ return '<tr><td><b>' + esc(s.nombre) + '</b></td><td>' + esc(s.direccion || '') + '</td><td>' + (s.activa === false ? '<span class="badge b-gris">Inactiva</span>' : '<span class="badge b-ok">Activa</span>') + '</td><td><button class="btn btn-sec btn-chico" onclick="editarSucursal(\'' + s.id + '\')">✏️</button></td></tr>'; }).join('') +
+      '<div class="tabla-wrap"><table><thead><tr><th></th><th>Nombre</th><th>Dirección</th><th>Estado</th><th></th></tr></thead><tbody>' +
+      listaSucursales().map(function(s, i, arr){ return '<tr data-id="' + s.id + '">' + asa('sucursales') + '<td><b>' + esc(s.nombre) + '</b></td><td>' + esc(s.direccion || '') + '</td><td>' + (s.activa === false ? '<span class="badge b-gris">Inactiva</span>' : '<span class="badge b-ok">Activa</span>') + '</td><td class="acc-fila">' + flechasOrden('sucursales', s.id, i, arr.length) + '<button class="btn btn-sec btn-chico" onclick="editarSucursal(\'' + s.id + '\')">✏️</button></td></tr>'; }).join('') +
       '</tbody></table></div></div>' +
     '<div class="card"><h3>👤 Usuarios</h3><div id="cfgUsuarios">' + (MODO_DEMO ? '<div class="nota">En modo demo no hay usuarios. Cuando conectes Firebase, acá vas a habilitar a cada persona y elegir su sucursal.</div>' : 'Cargando…') + '</div></div>' +
     '<div class="card"><h3>🎟️ Opciones de abonos</h3>' +
