@@ -56,7 +56,7 @@ Rosa Blue Sun **`#EA235C`** en toda la app (tokens en `:root`; por historia se l
 | `cajas/<suc>/<YYYY-MM-DD>` | `inicial, gastos/<id>{desc,importe}, retiros/<id>{quien→desc,importe}, observaciones, fichas/{gris,dorada}/{inicio,repuestas}, control/<equipoId>/sacadas, aCargo/<personalId>=nombre, supervisor{id,nombre}, resumen{…}`. Se guarda el **nombre** además del id para que el historial se lea aunque la ficha cambie o se borre. |
 | `roles/<uid>` | `rol ('admin'|'recepcion'|'lector'), sucursal, email` |
 | `solicitudes/<uid>` | Cuentas que ingresaron y todavía no tienen rol. |
-| `personal/<id>` | `nombre, puesto ('encargada'|'recepcionista'|'supervisora'), sucursalId ('' = todas), telefono, dni, notas, activo, orden`. Sólo admin escribe. |
+| `config/personal/<id>` | `nombre, puesto ('encargada'|'recepcionista'|'supervisora'), sucursalId ('' = todas), telefono, dni, notas, activo, orden`. Vive dentro de `config` a propósito: así lo cubre la regla de admin ya publicada y no hizo falta tocar las reglas (`RUTA_COL` mapea la colección `personal` a esa ruta para ordenar). |
 | `config/general` | `abonoMultiLocalDefault, diasAvisoVencimiento` |
 
 ### Reglas de negocio a respetar

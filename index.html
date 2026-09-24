@@ -621,9 +621,9 @@ function nombreEquipo(id){ return S.equipos[id] ? S.equipos[id].nombre : '—'; 
 function precioDe(serv, forma){ if(!serv) return 0; return forma === 'efectivo' ? (serv.precioEfectivo || 0) : (serv.precioTarjeta || 0); } // transferencia = precio tarjeta
 
 function cargarCatalogos(){
-  return Promise.all(['sucursales','equipos','servicios','clientes','abonos','config','personal'].map(function(k){ return DB.get(k); }))
+  return Promise.all(['sucursales','equipos','servicios','clientes','abonos','config'].map(function(k){ return DB.get(k); }))
     .then(function(r){
-      S.sucursales = conIds(r[0]); S.equipos = conIds(r[1]); S.servicios = conIds(r[2]); S.personal = conIds(r[6]);
+      S.sucursales = conIds(r[0]); S.equipos = conIds(r[1]); S.servicios = conIds(r[2]); S.personal = conIds((r[5] || {}).personal);
       S.clientes = conIds(r[3]); S.abonos = conIds(r[4]); S.config = r[5] || {};
       if(!Object.keys(S.equipos).length && esAdmin()){
         return DB.update(armarSemilla()).then(function(){ toast('Se cargaron los equipos y precios iniciales', 'ok'); return cargarCatalogos(); });
@@ -1550,9 +1550,10 @@ function moverOrden(col, id, dir, grupo){
   aplicarOrden(col, lista, id, true);
 }
 function listaOrdenable(col, grupo){ return col === 'servicios' ? listaServiciosTipo(grupo) : col === 'equipos' ? listaEquipos() : col === 'personal' ? listaPersonal() : listaSucursales(); }
+var RUTA_COL = { personal:'config/personal' }; // colecciones que no viven en la raíz
 function aplicarOrden(col, lista, id, animar){
   var antes = {}, u = {};
-  lista.forEach(function(x, k){ antes[x.id] = S[col][x.id].orden; S[col][x.id].orden = k + 1; u[col + '/' + x.id + '/orden'] = k + 1; });
+  lista.forEach(function(x, k){ antes[x.id] = S[col][x.id].orden; S[col][x.id].orden = k + 1; u[(RUTA_COL[col] || col) + '/' + x.id + '/orden'] = k + 1; });
   // se ve al instante (sin esperar a la base); si falla, se deshace
   if(animar) repintarConAnimacion(id); else { var y = window.scrollY; TABS[S.tab].render(); window.scrollTo(0, y); }
   if(col === 'sucursales') elegirSucursalInicial();
@@ -1747,7 +1748,7 @@ function editarPersona(id){
     var nid = id || DB.key();
     var d = { nombre:nombre, puesto:$('epPuesto').value, sucursalId:$('epSuc').value, telefono:$('epTel').value.trim(), dni:$('epDni').value.trim(),
               notas:$('epNotas').value.trim(), activo:$('epActivo').checked, orden:x.orden || 999 };
-    var u = {}; u['personal/' + nid] = d;
+    var u = {}; u['config/personal/' + nid] = d;
     DB.update(u).then(function(){ S.personal[nid] = Object.assign({ id:nid }, d); cerrarModal(); toast('Guardado ✔', 'ok'); renderPersonal(); }).catch(errorCarga);
   };
   setTimeout(function(){ $('epNombre').focus(); }, 50);
@@ -1755,7 +1756,7 @@ function editarPersona(id){
 function borrarPersona(id){
   var x = S.personal[id];
   if(!confirm('¿Borrar a ' + x.nombre + '? En los días ya cargados sigue figurando su nombre. Si solo dejó de trabajar, mejor desmarcá «Activa».')) return;
-  var u = {}; u['personal/' + id] = null;
+  var u = {}; u['config/personal/' + id] = null;
   DB.update(u).then(function(){ delete S.personal[id]; cerrarModal(); toast('Borrada', 'ok'); renderPersonal(); }).catch(errorCarga);
 }
 // «A cargo hoy» en la planilla del día
