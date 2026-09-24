@@ -29,7 +29,7 @@ Abrí `index.html` en el navegador. Mientras no esté configurado Firebase, la a
 3. **Publicar las reglas**: copiar el contenido de `database.rules.json` en Realtime Database → Reglas → Publicar.
    ⚠️ Que el archivo esté en el repositorio no significa que esté aplicado: hay que publicarlo a mano.
 4. **Crear tu usuario** en Authentication → Agregar usuario, con `speranza.emiliano@gmail.com`. Cuando entrás por primera vez, quedás como administrador y la app carga los equipos y los precios iniciales.
-5. **GitHub Pages**: Settings → Pages → Branch `main` / carpeta `root`. La app queda publicada en `https://speranzaemiliano-rk.github.io/blue-sun/`.
+5. **GitHub Pages**: Settings → Pages → Branch `main` / carpeta `root`. La app queda publicada en `https://mess-sge.github.io/blue-sun/`.
 
 ### Sumar a alguien de recepción
 
